@@ -1,0 +1,286 @@
+---
+title: "抓取表15数据：自部分国家(地区)进口商品类章金额表"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+# V8-03-01-cat:进口商品类章总值表（人民币值）
+
+## 资料来源：中国海关总署《统计月报》。
+
+- [中国海关总署](http://www.customs.gov.cn/customs/302249/302274/302277/index.html)
+
+
+- 网页标题： "（4）2019年2月进出口商品类章总值表（人民币值）"
+
+- 时间范围：月度数据。2014年6月-2020年5月
+
+- 网页内容: 
+    - 一张表；一部分
+    - 表头：类章、出口（本月当期/本月累计）、进口（本月当期/本月累计）、累计比去年同期变动％
+
+
+
+
+
+
+# 数据抓取流程
+
+
+
+
+
+### 3.3导出html为对应的csv文件
+
+```{r}
+#--------------------------
+# this chunk should run only once
+#--------------------------
+
+# files html path
+files_dir <- here::here("data", "v8", "03-trade-custom", "05-tbl16-country-import","html-01-custom")
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+
+# table the files
+tbl_files <- tibble(name_file=files_html,
+                    size = round(file.size(page_url)/1024,0)) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(currency   = str_extract(name_file, "(.{1})(?=\\.)")) %>%
+  mutate(path_file = paste0("html-01-custom/", name_file)) 
+
+# check
+check_sum <- tbl_files %>%
+  group_by(year, month, currency) %>%
+  summarize(n=n(), .groups="drop")
+
+
+# list selected cat
+list_big <- c(1:4)
+list_small <- c(1:24,31,50:52)
+list_cat <- c("总值",
+              paste0("第", list_big, "类"),
+              paste0("第", str_pad(list_big, width = 2, pad = "0"), "类"),
+              paste0(str_pad(list_small, width = 2, pad = "0"), "章"))
+
+# xpath for data table
+path_tbl <- "//*[@id='easysiteText']/table"
+
+
+i <- 2018
+j <- 2
+k <- 1
+
+for (i in 2020:2020) {
+  for (j in c(2:5)) {
+    # filter year and month
+    tbl_ym <- tbl_files %>%
+      filter(year==i, month==str_pad(j, width = 2, pad = "0"))
+    i_len <- nrow(tbl_ym)
+    
+    tbl_out <- NULL
+    num_country <- 0
+    # loop to export all csv files
+    for (k in 1:i_len) {
+      # read html
+      tbl_raw <- read_html(tbl_ym$path_file[k],encoding = "UTF-8") %>%
+        html_nodes(xpath = path_tbl) %>%
+        html_table(., fill=T, trim=T) %>%
+        .[[1]] %>%
+        mutate(X1=gsub("\u00A0", " ", X1)) 
+      
+      # detect the start and end row
+      first_end <- which(str_detect(tbl_raw$X1,"总值|98章"))
+      range <- (first_end[1]):first_end[2]
+      
+      # detect country
+      row_country <- which(str_detect(tbl_raw$X3,"至")) -1
+      list_country <- unlist(tbl_raw[row_country,-1]) %>%
+        str_trim(., "both") %>%
+        gsub("\u00A0", "", x =., perl = T)
+      len_country <- length(list_country)
+      
+      ### check if length is odd, stop
+      if (as.logical(len_country%%2)) stop("读取错误！国别列表为奇数！请核对！")
+      n_country <- len_country/2
+      
+      # obtain the cols variables
+      list_country_period <- str_c(list_country, 
+                                   rep(c("A", "B"), times= len_country/2),
+                                   sep="_")
+      list_vars <- c("V0", list_country_period)
+      
+      # get data table  
+      tbl_dt <- tbl_raw %>%
+        .[range,] %>%
+        as_tibble() 
+      
+      # type convert
+      tbl_num <- tbl_dt %>%
+        mutate_at(all_of(names(.)[-1]), function(x){str_replace(x, "-", "" )}) %>%
+        mutate_at(all_of(names(.)[-1]), ~as.numeric(gsub(pattern = ",", replacement = "", x = . ))) %>%
+        rename_at(all_of(names(.)), ~list_vars)
+      
+      # tidy the data table
+      tbl_cat <-  tbl_num %>%
+        mutate(cat=str_extract(V0, "(总值)|(.*?类)|(.*?章)")) %>%
+        filter(cat %in% list_cat) %>%
+        select(cat, all_of(list_vars[-1]))
+     
+      # gather the table
+      tbl_shape <- tbl_cat  %>%
+        gather(key = "country_period", value="value", -cat) %>%
+        separate(col = "country_period", into = c("country", "period")) 
+    
+      # add year-month
+      tbl_add <- tbl_shape %>%
+        add_column(year=i, .before = "cat") %>%
+        add_column(month=str_pad(j, width = 2, pad = "0"), .after = "year") %>%
+        add_column(currency=tbl_ym$currency[k], .after = "month") %>%
+        add_column(files=tbl_ym$name_file[k]) %>%
+        mutate(currency= if_else(currency=="D", "千美元", "万元人民币")) 
+      
+      # check actual rows and theory rows
+      rows_act <- nrow(tbl_add) 
+      
+      # print message
+      print(paste0(i,"年", j, "月。第",k , "个html页面：", tbl_ym$name_file[k], "。共", i_len , "个html页面。此页面实际数行=", rows_act))
+      
+      # combine 
+      tbl_out <- bind_rows(tbl_out, tbl_add)
+      num_country <- num_country + n_country
+      
+    }
+    
+    # check actual rows and theory rows
+      rows_act <- nrow(tbl_out) 
+      rows_theory <- (length(list_cat)-4)*num_country*2        # one part table
+      
+      if (rows_theory == rows_act) {
+        print(paste0("恭喜！实际数据点数与理论一致！数据点数=", rows_act))
+      } else {
+        print(paste0("不妙！实际数据点数与理论不一致！实际数=", rows_act, ";理论数=", rows_theory))
+      }
+      
+      if (rows_theory != rows_act) stop("请检查，数据量与预期不一致！")
+   
+    # checking when there were inconsistent
+    ttt <- tbl_out %>%
+      dplyr::group_by(currency) %>%
+      dplyr::summarize(n=n(), .groups="drop" )
+    
+    # wait to see the result
+    Sys.sleep(3)
+   
+    
+    # files csv path
+    path_csv <- paste0("csv-custom/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+    write.csv(tbl_out, path_csv, row.names = F)
+    
+  }
+}
+
+```
+
+
+
+对于2016-12的xls文件单独处理。
+
+- **表16**：自部分国家(地区)进口商品类章金额表：
+    - 2016-12，缺失网页表格；但是可以下载到excel表格。 后面需要单独处理。保存在`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-D.xls`和`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-R.xls`
+    
+因为搜数网已经下载有，可以不做处理。
+
+
+```{r, eval=F}
+library("xlsx")
+
+# read html
+tbl_raw <- read.xlsx("hack-sooshu/extra-custom/2016-12-D.xlsx", sheetIndex = 1, encoding = "gb2312")
+```
+
+
+
+
+## 3.4合并全部csv表格有效数据
+
+
+```{r, eval=FALSE, echo=FALSE}
+# set for chinese header
+vars_chn <- c("年度","月份", "序号","类章序号","类章名目" ,
+             "出口_当月", "出口_累计","进口_当月", "进口_累计",
+             "累计同期变动_出口","累计同期变动_进口")
+vars_eng <- c("Year","Month", "ID",
+             "cat", paste0("X", 1:7))
+cat_list <- paste0(str_pad(c(1:4,7:8,10:11,15,31,51:52), width = 2, pad = "0"),
+                   "章")
+
+# files path
+csv_dir <- here::here("data", "v8", "03-trade-custom","05-tbl16-country-import", "csv-custom")
+csv_files <- list.files(str_c(csv_dir,"/"))
+csv_url <- str_c(csv_dir, csv_files, sep = "/")
+
+
+# i <-1 length(csv_files)
+tbl_out <- NULL
+for (i in 1:length(csv_files)) {
+  path_csv <- csv_files[i]
+  
+  # table for checking with the csv file
+  tbl_tem <- read.csv(csv_url[i], header = T) 
+  # row bind 
+  tbl_out <- bind_rows(tbl_out, tbl_tem)
+  print(csv_files[i])
+}
+
+# checking when there were inconsistent
+ttt <- tbl_out %>%
+  group_by(country) %>%
+  summarize(n=n())
+
+tbl_bad <- tbl_out %>%
+  filter(country=="中国")
+
+# replace the country name 
+tbl_tidy <- tbl_out %>%
+  # tidy the country name
+  mutate(country = str_replace(country, ("(?!智利)(智)"), "智利")) %>%
+  mutate(country = str_replace(country, ("(台湾省)"), "中国台湾")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(台湾)"), "中国台湾")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(澳门)"), "中国澳门")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(香港)"), "中国香港")) %>%
+  # tidy the cat
+  mutate(cat = str_replace(cat,"(第)(\\d{1}类)", "\\10\\2")) %>%
+  # tidy the currency
+  mutate(currency = str_replace(currency, ("(万元)"), "万")) %>%
+  mutate(currency = str_replace(currency, ("(?!千美元)(千美)"), "千美元"))  %>%
+  # add source
+  add_column(source="custom")
+
+
+### check the unique country
+# unique(tbl_tidy$country)
+
+
+
+```
+
+
+
+## 3.5写出有效数据
+
+```{r}
+path_out <- str_c("source01-custom-tbl16-country-import-", Sys.Date(),".csv")
+write.csv(tbl_tidy, path_out, row.names = F)
+```

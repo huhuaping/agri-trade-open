@@ -1,0 +1,186 @@
+---
+title: "抓取表4数据：出口商品类章总值表"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+# V8-03-01-cat:出口商品类章总值表（人民币值）
+
+## 资料来源：中国海关总署《统计月报》。
+
+- [中国海关总署](http://www.customs.gov.cn/customs/302249/302274/302277/index.html)
+
+
+- 网页标题： "（4）2019年2月进出口商品类章总值表（人民币值）"
+
+- 时间范围：月度数据。2014年6月-2020年5月
+
+- 网页内容: 
+    - 一张表；一部分
+    - 表头：类章、出口（本月当期/本月累计）、进口（本月当期/本月累计）、累计比去年同期变动％
+
+
+
+
+
+
+# 数据抓取流程
+
+
+## 导出html为对应的csv文件
+
+
+```{r, eval=FALSE}
+
+#--------------------------
+# this chunk should run only once
+#--------------------------
+
+# files html path
+files_dir <- here::here("data", "v8", "03-trade-custom", "01-tbl04-cat","html")
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# specify the year and month
+page <- page_url
+year <- str_extract(files_html, "(.{4})(?=-)") 
+month <- str_extract(files_html, "(?<=-)(.{2})") 
+i_len <- length(page)
+
+# files csv path
+csv_dir <- here::here("data", "v8", "03-trade-custom", "01-tbl04-cat","csv")
+path_csv <- paste0("csv/",year, "-", month, ".csv")
+
+# loop to export all csv files
+### i<-37
+
+for (i in 1:i_len) {
+  # obtain raw table
+  if (year[i]=="2017" & month[i]=="06"){            # special case for 2017-06.html
+     path_tbl<-"//*[@id='easysiteText']/div/table"
+  } else {
+    path_tbl<-"//*[@id='easysiteText']/table"
+  }
+  
+  # read html
+  tbl_raw <- read_html(page[i],encoding = "UTF-8") %>%
+    html_nodes(xpath = path_tbl) %>%
+    html_table(., fill=T, trim=T) %>%
+    .[[1]] %>%
+    mutate(X1=gsub("\u00A0", " ", X1)) 
+  # detect the start and end row
+  first_end <- which(str_detect(tbl_raw$X1,"总值|98章"))
+  range <- (first_end[1]):first_end[2] 
+  # delete rows unnecessary  
+  tbl_dt <- tbl_raw %>%
+    .[range,] %>%
+    as_tibble() 
+  # type convert
+  tbl_out <- tbl_dt %>%
+    mutate_at(all_of(names(.)[-1]), ~as.numeric(gsub(pattern = ",", replacement = "", x = . )))
+  # print process info  
+  print(paste0("the ",i,"th file for the year of ",year[i], ", file name:", files_html[i]))  
+  
+  # add year-month
+  tbl_add <- tbl_out %>%
+    add_column(Year=year[i], .before = "X1") %>%
+    add_column(Month=month[i], .after = "Year") %>%
+    add_column(ID=1:nrow(.), .after = "Month")
+  
+  # print for check
+  print(filter(tbl_add, ID%in%range(tbl_add$ID)))
+  Sys.sleep(3)
+  
+  # write file out as csv
+  write.csv(tbl_add, path_csv[i], row.names = FALSE)
+    
+}
+
+
+```
+
+
+
+## 合并全部csv表格有效数据
+
+我们重点关注如下章的相关农产品：
+
+```
+第一类 活动物；动物产品
+  01章 活动物
+  02章 肉及食用杂碎
+  03章 鱼、甲壳动物、软体动物及其他水生无脊椎动物
+  04章 乳品；蛋品；天然蜂蜜；其他食用动物产品
+
+第二类 植物产品
+  07章 食用蔬菜、根及块茎
+  08章 食用水果及坚果；甜瓜或柑桔属水果的果皮
+  10章 谷物
+  11章 制粉工业产品；麦芽；淀粉；菊粉；面筋
+
+第三类  动、植物油、脂及其分解产品；精制的食用油脂；动、植物蜡
+  15章 动、植物油、脂及其分解产品；精制的食用油脂；动、植物蜡
+
+第六类 化学工业及其相关工业的产品
+  31章 肥料
+
+第十一类 纺织原料及纺织制品
+  51章 羊毛、动物细毛或粗毛；马毛纱线及其机织物
+  52章 棉花
+```
+
+
+```{r, eval=FALSE}
+# set for chinese header
+vars_chn <- c("年度","月份", "序号","类章序号","类章名目" ,
+             "出口_当月", "出口_累计","进口_当月", "进口_累计",
+             "累计同期变动_出口","累计同期变动_进口")
+vars_eng <- c("Year","Month", "ID",
+             "cat", paste0("X", 1:7))
+cat_list <- paste0(str_pad(c(1:4,7:8,10:11,15,31,51:52), width = 2, pad = "0"),
+                   "章")
+
+# files path
+csv_dir <- here::here("data", "v8", "03-trade-custom","01-tbl04-cat", "csv")
+csv_files <- list.files(str_c(csv_dir,"/"))
+csv_url <- str_c(csv_dir, csv_files, sep = "/")
+
+
+# i <-1 length(csv_files)
+tbl_out <- NULL
+for (i in 1:length(csv_files)) {
+  path_csv <- csv_files[i]
+  
+  # table for checking with the csv file
+  tbl_tem <- read.csv(csv_url[i], header = T) %>%
+    add_column(cat=str_extract(.$X1,pattern = "(.+章)|(第.*?类)|(总值)"), .before="X1") %>%
+     filter(cat %in% cat_list)
+  
+  # row bind 
+  tbl_out <- bind_rows(tbl_out, tbl_tem)
+  print(csv_files[i])
+}
+
+# spread table 
+tbl_chn <- tbl_out %>%
+  rename_at(names(.), ~ all_of(vars_chn))
+
+```
+
+
+
+## 写出有效数据
+
+```{r, eval=FALSE}
+path_out <- str_c("tab-tbl04-cat-", Sys.Date(),".csv")
+write.csv(tbl_chn, path_out, row.names = F)
+```
+

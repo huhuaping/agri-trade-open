@@ -1,0 +1,61 @@
+---
+title: "世界粮农组织国家农产品贸易数据"
+author: "胡华平"
+date: "2020/6/24"
+output: html_document
+---
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+
+# 数据集01：贸易矩阵
+
+V8-02-trade-fao 世界粮农组织国家农产品贸易数据
+
+
+## 数据入口：
+
+-  [FAOstat](http://www.fao.org/faostat/zh/#data/TM)
+
+
+## 指标和变量: 
+
+报告国与伙伴国农产品进出口总值：
+
+- 指标（数据列）：value（金额）
+
+- 样本单位（数据行）：country-year-products（国家/年度/分类产品）
+
+- 可获取数据的年限：视样本单位情况
+
+## 原始数据获取方式和数据格式
+
+- 获取方式1：指定查询-下载
+
+- 获取方式2：批量下载
+
+- .csv格式
+
+
+
+
+## 数据处理流程
+
+
+
+### 清洗和整理数据
+
+
+
+### 导出有效数据
+
+```{r, eval=FALSE}
+path_out <- str_c("tab-gdp-dq", Sys.Date(),".csv")
+write.csv(tbl_spread, path_out, row.names = F)
+```
+

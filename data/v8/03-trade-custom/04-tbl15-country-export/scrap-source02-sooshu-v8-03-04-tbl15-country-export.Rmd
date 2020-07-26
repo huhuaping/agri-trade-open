@@ -1,0 +1,1119 @@
+---
+title: "抓取表15数据：对部分国家(地区)出口商品类章金额表"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    reference_docx: report-reference.docx
+  bookdown::html_document2:
+    number_sections: yes
+    toc: no
+    fig_caption: yes
+    toc_float: yes
+always_allow_html: yes
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, eval = FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+
+```
+
+```{r}
+require("rvest")
+require("xml2")
+require("httr")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+\newpage
+
+# 1.研究目标
+
+目标是把中国海关发布的两张表数据（表15和表16）——部分国家(地区)出口/进口商品类章金额表（人民币值）——所有数据整理出来。初步分析，我国主要农产品进/出口国家和地区的趋势和关系。
+
+这个目标比较明确和具体，数据是可获得的。数据集最终为中国跟各个国家在主要农产品上的月度（20余年x12月/年=`r 20*12+5`）进出口贸易额。
+
+# 2.数据集V8-03-04-cat:对部分国家(地区)出口商品类章金额表（人民币值）
+
+## 2.1资料来源1：中国海关总署《统计月报》。
+
+- 数据网站：[中国海关总署](http://www.customs.gov.cn/customs/302249/302274/302277/index.html)
+
+- 时间范围：月度数据。2014年6月-2020年5月
+
+- 网页标题： "(15)2014年对部分国家(地区)出口商品类章金额表"
+
+- 网页内容: 农产品对部分国家(地区)出口商品类章金额表：
+    - 指标（数据列）：月度-国家金额【按人民币】
+    - 样本单位（数据行）：商品类章
+    - 数据频率：月度
+
+
+## 2.2资料来源2：中国海关总署《统计月报》。
+
+- 数据网站：搜数网[人大权限](https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136)
+
+    - 搜数标题："2000年5月中国出口主要商品量值表统计"/"2000年5月中国进口主要商品量值表统计"
+    - 可下载年限范围：2000/1-2019/12
+    - 文件格式：html-形式表格
+
+- 时间范围：月度数据。2000年1月-2014年5月
+
+- 网页标题： "2000年1月中国对部分国家(地区)出口商品类章金额表统计(一)/.../(十一)"
+
+- 网页内容: 农产品对部分国家(地区)出口商品类章金额表：
+
+    - 每个月多张表，每张表1个部分
+    - 指标（数据列）：月度-国家金额【按人民币】
+    - 样本单位（数据行）：商品类章
+    - 数据频率：月度
+
+
+# 3.数据抓取流程
+
+## 3.1 前期准备
+
+具体用到两项技术
+
+- 技术1：`ROpenCVLite` + `Rvision`解决滑块验证登录等问题。
+
+- 技术2：`docker` + `RSelenium`组合（chrome）实现虚拟机自动抓取。
+
+
+Google Chrome查看cookie值的[操作步骤](https://pcedu.pconline.com.cn/1284/12840359.html)
+
+
+### 环境配置
+
+```{r, eval=FALSE}
+# 1. install Cmake and rtools
+### make sure to tell the installer to add CMake and Rtools to your “PATH”
+writeLines('PATH="${RTOOLS40_HOME}\\usr\\bin;${PATH}"', con = "~/.Renviron")
+Sys.which("make")
+Sys.getenv("PATH")
+
+# 2. install Ropencvlite
+install.packages("ROpenCVLite")
+devtools::install_github("swarm-lab/ROpenCVLite")
+library(ROpenCVLite)
+
+# 3. check cmake is installed success
+ROpenCVLite::isCmakeInstalled()
+
+# 4. install opencv
+ROpenCVLite::installOpenCV()
+### check OpenCV is installed success
+ROpenCVLite::isOpenCVInstalled()
+
+
+# 5. install devtools and Rvision
+if (!require(devtools)){
+  install.packages("devtools")}
+# install.packages('I://0nextclound/backports_1.1.8.zip', repos = NULL, type = "win.binary")
+devtools::install_github("swarm-lab/Rvision")
+
+```
+
+
+
+### 测试1：读取图片
+
+纯手动获取两张图片，然后进行读取和保存本地。
+
+```{r}
+#install.packages("base64enc")
+library("base64enc")
+library("png")
+
+fig_front <- read_lines("hack-sooshu/login-slider-front-1.txt")
+fig_bg <- read_lines("hack-sooshu/login-slider-bg-1.txt")
+
+# 44*44 pixels
+raw_front <- base64enc::base64decode(what = substr(fig_front, 23, nchar(fig_front)))
+png::writePNG(png::readPNG(raw_front), "hack-sooshu//login-front-1.png")
+
+# 280*171 pixels
+raw_bg <- base64enc::base64decode(what = substr(fig_bg, 23, nchar(fig_bg)))
+png::writePNG(png::readPNG(raw_bg), "hack-sooshu//login-bg-1.png")
+```
+
+
+### 测试2：匹配图片并找到位置
+
+[selenium+openCV干掉滑动验证码](https://www.bilibili.com/s/video/BV1zJ41187i8)
+
+[Convert image between colorspaces](https://swarm-lab.github.io/Rvision/reference/changeColorSpace.html)
+
+[Template Matching](https://swarm-lab.github.io/Rvision/reference/matchTemplate.html?q=temp)
+
+
+```{r}
+require("Rvision")
+
+# 1. read image
+image_bg <- Rvision::image("hack-sooshu/login-bg.png")
+image_front <- Rvision::image("hack-sooshu/login-front.png")
+
+# 2. change color gray
+gray_bg <- changeColorSpace(image_bg, "GRAY")
+gray_front <- changeColorSpace(image_front, "GRAY")
+
+# 3. trim the front image for zero row
+### 3.1 get the origin array
+gray_array <- as.array(gray_front)
+### 3.2 filter zero rows
+library("tidyverse")
+gray_matrix <- as.matrix(gray_front) %>%
+  unique() %>%
+  .[-1,]
+### 3.3 create new array
+trim_array<- array(c(as.vector(gray_matrix),"I"=0),dim = c(dim(gray_matrix),1))
+### 3.4 change the bit depth  of image as the same as the bg
+gray_tem <- changeBitDepth(image(trim_array), "8U")
+
+
+# 4. match the image
+### 4.1 match by using the method of "CCOEFF_NORMED"
+gray_match <- matchTemplate(image=gray_bg, template = gray_tem, method ="CCOEFF_NORMED" )
+### 4.2 locate the pixel
+mm <- minMaxLoc(gray_match)
+### 4.3 get the center position
+pix_move <- mm["max", "x"]-18
+
+```
+
+
+
+## 3.2 RSelenium+docker读取网页
+
+Use RSelenium to perform drag-and-drop action [see](https://stackoverflow.com/questions/48970251/use-rselenium-to-perform-drag-and-drop-action)
+
+#### 滑块验证登录人大图书馆
+
+
+```{r, eval=FALSE,echo=T}
+# 0. load R pkgs
+library("RSelenium")
+library("xml2")
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+#-------part 01 start docker + RSelenium-------
+# 1. run docker service and container
+#### you should run and start docker desktop first.
+#### then run code in 'window power shell': docker run -d -p 4445:4444 selenium/standalone-chrome
+
+# 2. create the remote driver
+### 'window power shell': ipconfig
+### surface book2: 192.168.56.1
+remDr <- remoteDriver(remoteServerAddr = "192.168.56.1", port = 4445L, 
+                      browserName = "chrome")
+
+#------part 02 navigate the website----------
+## open the connect
+remDr$open()
+# you should set the table number to download all html for each url
+url_list <- "http://libproxy.ruc.edu.cn/ermsLogin/view.do" 
+# navigate the url
+remDr$navigate(url_list)
+# wait seconds
+Sys.sleep(2)
+# confirm you got there
+# print(remDr$getTitle())
+# check on there
+remDr$screenshot(display = TRUE)
+
+# submit form
+xpath_usr <- "//*[@id='loginform-1']/div[2]/dl[1]/dd/input"
+xpath_psw <- "//*[@id='loginform-1']/div[2]/dl[2]/dd/input"
+
+remDr$findElement("xpath", xpath_usr)$sendKeysToElement(list("user"))
+remDr$findElement("xpath", xpath_psw)$sendKeysToElement(list("password"))
+remDr$screenshot(display = TRUE)
+
+# move mouse on upon the form
+xpath_scroller <- "//*[@id='loginform-1']/div[2]/dl[3]/dd/div/div[2]/span[2]"
+element_scroller <- remDr$findElement(using = "xpath", value = xpath_scroller)
+remDr$mouseMoveToLocation(webElement=element_scroller)
+# wait seconds
+Sys.sleep(1)
+# check on there
+remDr$screenshot(display = TRUE)
+
+
+#------part 03 obtain the background and front png figure -------
+css_bg <- "#loginform-1 > div:nth-child(2) > dl:nth-child(3) > dd > div > div.imgBg"
+css_front <- "#loginform-1 > div:nth-child(2) > dl:nth-child(3) > dd > div > div.imgBg > div > img"
+
+src_bg <- remDr$findElement(using = "css", value = css_bg)$getElementAttribute("style") %>%
+  unlist() %>%
+  str_extract(pattern = "(?<=base64,)(.+?)(?=\\))") 
+
+src_front <- remDr$findElement(using = "css", value = css_front)$getElementAttribute("src") %>%
+  unlist() %>%
+  str_extract(pattern = "(?<=base64,)(.+)") 
+
+library("base64enc")
+library("png")
+# 44*44 pixels
+raw_front <- base64enc::base64decode(what = substr(src_front, 1, nchar(src_front)))
+png::writePNG(png::readPNG(raw_front), "hack-sooshu//login-front.png")
+
+# 280*171 pixels
+raw_bg <- base64enc::base64decode(what = substr(src_bg, 1, nchar(src_bg)-2))
+png::writePNG(png::readPNG(raw_bg), "hack-sooshu//login-bg.png")
+
+#-------part 04 OpenCV to match the two image------
+require("Rvision")
+# 1. read image
+image_bg <- Rvision::image("hack-sooshu/login-bg.png")
+image_front <- Rvision::image("hack-sooshu/login-front.png")
+# 2. change color gray
+gray_bg <- changeColorSpace(image_bg, "GRAY")
+gray_front <- changeColorSpace(image_front, "GRAY")
+## plot(gray_bg)
+## plot(gray_front)
+
+# 3. trim the front image for zero row
+### 3.1 get the origin array
+gray_array <- as.array(gray_front)
+### 3.2 filter zero rows
+gray_matrix <- as.matrix(gray_front) %>%
+  unique() %>%
+  .[-1,] %>%
+  .[, colSums(. != 0) > 0]
+### 3.3 create new array
+trim_array<- array(c(as.vector(gray_matrix),"I"=0),dim = c(dim(gray_matrix),1))
+### 3.4 change the bit depth  of image as the same as the bg
+gray_tem <- changeBitDepth(image(trim_array), "8U")
+### plot(gray_tem)
+
+# 4. match the image
+### 4.1 match by using the method of "CCOEFF_NORMED"
+gray_match <- matchTemplate(image=gray_bg, template = gray_tem, method ="CCOEFF_NORMED" )
+### 4.2 locate the pixel
+mm <- minMaxLoc(gray_match)
+### 4.3 get the center position
+pix_move <- mm["max", "x"]-19
+
+#------part 05 drag and drop the scroller----
+
+xpath_mover <- "//*[@id='loginform-1']/div[2]/dl[3]/dd/div/div[2]/span[1]"
+webElem_mover <- remDr$findElement(using = 'xpath', xpath_mover)
+# wait seconds
+Sys.sleep(2)
+remDr$mouseMoveToLocation(webElement = webElem_mover)
+Sys.sleep(2)
+remDr$buttondown()
+# wait seconds
+Sys.sleep(2)
+remDr$mouseMoveToLocation(x=pix_move)
+# wait seconds
+Sys.sleep(2)
+remDr$buttonup()
+# wait seconds
+Sys.sleep(1)
+# show shot  
+remDr$screenshot(display = TRUE)
+
+# check the scrollering result
+css_scroller <- "#loginform-1 > div:nth-child(2) > dl:nth-child(3) > dd > div > div.hkinnerWrap > span.huakuai"
+txt <- remDr$findElement(using = "css", value = css_scroller)$getElementText() %>%
+  unlist()
+if (txt=="验证成功"){
+  print("恭喜!滑块验证成功！可以继续下一步。")
+} else {
+  print("不妙！滑块验证不成功！请再来一遍吧。")
+  remDr$close()
+}
+
+# click the submit button to login
+xpath_submit <- "//*[@id='loginform-1']/div[4]/input"
+remDr$findElement(using = "xpath", value = xpath_submit)$clickElement()
+Sys.sleep(4)
+remDr$screenshot(display = TRUE)  # show shot  
+
+#close the driver
+#remDr$close()
+
+#close the server
+#remDr$server$stop()
+
+```
+
+
+#### 进入搜数网并完成条目搜索
+
+因为数据条目的标题比较一致（例如“中国2019年1-11月对部分国家(地区)出口商品类章金额统计”），而且数据来源（“海关统计”）比较清楚，所以可以批量搜索到全部数据条目。
+
+
+  
+```{r}
+# navigate the data platform
+url_stat <-"http://libproxy.ruc.edu.cn/entry.do?rid=136&uid=295"
+remDr$navigate(url_stat)
+Sys.sleep(2)
+remDr$screenshot(display = TRUE)  # show shot  
+
+# clear default start date and then fill with designed date
+xpath_date1 <- "/html/body/div[4]/div[1]/center/form[2]/table[2]/tbody/tr/td/table[5]/tbody/tr[2]/td[2]/input"
+remDr$findElement(using = "xpath", value = xpath_date1)$clearElement()
+remDr$findElement(using = "xpath", value = xpath_date1)$sendKeysToElement(list("20000101"))
+
+# clear default end date and then fill with designed date
+#xpath_date2 <- "/html/body/div[4]/div[1]/center/form[2]/table[2]/tbody/tr/td/table[5]/tbody/tr[2]/td[4]/input"
+#remDr$findElement(using = "xpath", value = xpath_date2)$clearElement()
+#remDr$findElement(using = "xpath", value = xpath_date2)$sendKeysToElement(list("20200718"))
+
+# remDr$goBack()
+
+# fill text keywords
+keywords <- c("对部分国家 出口商品类章","海关统计")
+xpath_key <- "/html/body/div[4]/div[1]/center/form[2]/table[2]/tbody/tr/td/table[4]/tbody/tr/td[2]/input"
+remDr$findElement(using = "xpath", value = xpath_key)$sendKeysToElement(list(keywords[1]))
+
+# check
+remDr$screenshot(display = TRUE)  # show shot 
+
+# click to search
+xpath_search <- "/html/body/div[4]/div[1]/center/form[2]/table[2]/tbody/tr/td/table[4]/tbody/tr/td[3]/input"
+remDr$findElement(using = "xpath", value = xpath_search)$clickElement()
+Sys.sleep(2)
+remDr$screenshot(display = TRUE)  # show shot 
+
+# refine the search
+key_refine <- c("海关统计")
+xpath_key_refine <- "/html/body/div[4]/div[1]/center/table[6]/tbody/tr/td/input[1]"
+remDr$findElement(using = "xpath", value = xpath_key_refine)$sendKeysToElement(list(key_refine[1])) 
+
+xpath_opt_refine <- "/html/body/div[4]/div[1]/center/table[4]/tbody/tr/td[3]/input"
+remDr$findElement(using = "xpath", value = xpath_opt_refine)$clickElement()
+
+xpath_search_refine <- "/html/body/div[4]/div[1]/center/table[6]/tbody/tr/td/input[2]"
+remDr$findElement(using = "xpath", value = xpath_search_refine)$clickElement()
+Sys.sleep(2)
+remDr$screenshot(display = TRUE)  # show shot 
+
+```
+
+#### loop得到所有数据条目的相对地址href
+
+只需要读取一次即可，因为相对地址是固定的。
+
+所以要注意本地保存！
+
+```{r}
+#------numbers of page----------
+css_pages <- "body > div:nth-child(4) > div:nth-child(1) > center > table:nth-child(10) > tbody > tr:nth-child(2) > td > table > tbody > tr > td:nth-child(2) > p"
+### source contain page
+num_pg <- remDr$findElement("css", css_pages)$getElementText() %>%
+  unlist() 
+### get the total pages
+num_tot <- num_pg %>%
+  str_extract("(?<=共)(.+?)(?=页)") %>%
+  as.numeric()
+### obtain the current page  
+num_cur <- num_pg %>%
+  str_extract("(?<=第)(.+?)(?=页)") %>%
+  as.numeric()
+
+#------parse the page----------
+### get the first part of the real url
+url_cur <- remDr$getCurrentUrl() %>%
+  unlist() %>%
+  str_extract("(.+)(?=/Iris)")
+
+tbl_com <- NULL
+for (i in 1:num_tot){
+  ### click the turn over button 
+  xpath_turn <- "/html/body/div[4]/div[1]/center/table[8]/tbody/tr[2]/td/table/tbody/tr/td[3]/p/input[3]"
+  if (i > 1){
+    remDr$findElement("xpath", xpath_turn)$clickElement()
+  }
+  Sys.sleep(2)
+  remDr$screenshot(display = TRUE)  # show shot 
+  ### get the page source
+  doc <- remDr$getPageSource()[[1]]
+  Sys.sleep(1)
+  ### get the href
+  raw_ref<-  read_html(doc, encoding = "gb2312") %>%
+    html_nodes(css="tbody>tr>td>a") %>%
+    html_attr("href") %>%
+    as_tibble() %>%
+    rename("href"="value") %>%
+    .[-1,]
+  ### get the table
+  xpath_tbl <-"/html/body/div[4]/div[1]/center/form/table"
+  raw_tbl<-  read_html(doc, encoding = "gb2312") %>%
+    html_nodes(xpath = xpath_tbl) %>%
+    html_table(., fill = T, trim=T) %>%
+    .[[1]] %>%
+    filter(!is.na(X2)) %>%
+    mutate(X1=1:nrow(.))
+  ### combine columns of two table
+  tbl_tem <- bind_cols(raw_tbl, raw_ref) 
+  tbl_com <- bind_rows(tbl_com, tbl_tem) 
+  
+  print(paste0("第",i,"页，共", num_tot, "页")) 
+}
+
+### you should keep two copies of the results
+### one for backup, the other for correct by hand.
+# write_rds(tbl_com,"tbl-com.rds")
+# write.csv(tbl_com,"tbl-com.csv", row.names = FALSE)
+
+```
+
+#### 清洗条目列表，并获得实际地址urls
+
+数据条目网页的实际地址urls实际上是两个部分的组合。其中：第一部分可变动，第二部分维持不变。
+
+- part 1：早前搜索全部条目界面的网址的一部分。具体就是`url_cur <- remDr$getCurrentUrl() `。这个部分随着登录搜数网的身份识别而改变。
+
+- part 2：数据条目的相对地址。具体就是`tbl_com`表格里的列`href`。这个部分总是维持恒定的（搜索关键词不变的情况下）。
+
+
+```{r}
+# after some check, you should correct these lier for html title. and then read it from the correct .csv file
+tbl_com <- read.csv("tbl-com.csv")
+### you can check that if the sheet is correct
+# which(is.na(tbl_urls$sheet))
+
+#------combine the table and tidy it----------
+### handel chinese numbers
+num_chn_base <- c("一","二","三","四","五","六","七","八","九")
+num_chn <- c(num_chn_base, "十", 
+             paste0("十", num_chn_base), "二十",
+             paste0("二十", num_chn_base), "三十",
+             paste0("三十", num_chn_base), "四十",
+             paste0("四十", num_chn_base), "五十")
+num_eng <- c(1:50)
+### dity the table
+tbl_urls <- tbl_com  %>%
+  # handle X4
+  mutate(X4=str_replace(X4, "\\(美元值\\)", "")) %>%
+  mutate(year= as.numeric(str_extract(X4, "(\\d{4})(?=年)")),
+         month_raw= str_extract(X4, "(?<=年)(.+)(?=月)")) %>%
+  mutate(month = if_else(str_detect(month_raw,"-|至"), 
+                         str_extract(month_raw, "(?<=-|至)(.+)"),
+                         month_raw),
+         month = as.numeric(month),
+         month = str_pad(month, width = 2, side="left", pad="0")) %>%
+  mutate(sheet_raw= str_extract(X4, "(?<=统计\\(|表\\()(.+?)(?=\\))"),
+         sheet=as.numeric(mgsub::mgsub(sheet_raw,num_chn, num_eng)),
+         sheet= str_pad(sheet, width = 2, side="left", pad="0")) %>%
+  mutate(id_no = str_extract(href, "(?<=no\\=)(.+)(?=&cs)"),
+         id_cs = str_extract(href, "(?<=cs\\=)(.+)(?=&st)")) %>%
+  mutate(cur = substr(id_no, start = 3, stop = 4)) %>%
+  # real urls
+  mutate(urls = paste0(url_cur, href)) %>%
+  # file names
+  mutate(name_file = paste0(year, "-",month, "-c", cur, "-t",sheet, ".html")) %>%
+  add_column(ID=1:nrow(.), .before = "X1")
+
+### backup for check
+#   xlsx::write.xlsx(tbl_urls,"tbl-urls-backup-final.xlsx")
+
+```
+
+
+#### loop得到全体条目的静态html
+
+实际数据条目的静态页面总共有`nrow(tbl_urls)=4706`个，也是耗时最多的地方。实践下载发现：
+
+- 下载速度较慢。平均约20~25s/page。总耗时约`r round(4706*25/3600,2)`小时。跟电脑本身的网速没有关系，跟白天和晚上也没有关系。具体可能是卡在“下载源码-读取源码-保存到本地”的前两个步骤。
+
+- 可以一个账号（人大账号）多台电脑同时登录下载（`docker` + `Rselenium`）。
+
+- `docker` + `Rselenium`可能会随时超时连接不上。所以要定时查看。
+
+
+```{r}
+#------loop to download the static html page--------------------
+
+#nrow(tbl_urls)
+for (i in c(3095:3096)  ){
+  # navigate the url
+  remDr$navigate(tbl_urls$urls[i])
+  # wait seconds
+  Sys.sleep(1)
+  # confirm you got there
+  # print(remDr$getTitle())
+  # check on there
+  #remDr$screenshot(display = TRUE)
+  # get the page source
+  webpage <- remDr$getPageSource()[[1]]
+  # wait seconds
+  #Sys.sleep(1)
+  # read as html object
+  html_obj <- xml2::read_html(webpage)
+  # write out the html file
+  dir_file <- paste0("html-02-sooshu/", tbl_urls$name_file[i])
+  xml2::write_xml(html_obj, file=dir_file)
+  #remDr$screenshot(display = TRUE)  # show shot 
+  print(paste0(tbl_urls$name_file[i],
+               "，第", i , "个页面，共", 
+               nrow(tbl_urls), "个页面"))
+}
+
+tbl_urls_backup  <- tbl_urls %>%
+  add_column(id=1:nrow(.), .before = "X1")
+xlsx::write.xlsx(tbl_urls_backup, "tbl-urls-backup.xlsx", row.names = F)
+
+```
+
+#### 核对页面数
+
+c(3117:3118,3095:3096,2830:2831) 
+
+2013-10-c32-t08.html 2830  (七 -> 十七)
+2011-07-c26-t17.html 3095  (十八 -> 十七)
+2011-06-c24-t17.html 3117  (十八 -> 十七)
+
+
+#### 核对html文件及其命名的正确性
+
+基本思路：先摘要查看，简单手工处理修正。
+
+核对下载的全部html文件及其命名关系，可以用下面的代码：
+
+```{r}
+tbl_check <- tbl_urls %>%
+  group_by(year, month, cur) %>%
+  summarize(n=n())
+  names(tbl_urls)
+```
+
+核对的具体结果如下：
+
+2000-2013年：主要是美元币值
+
+- 2002-11 (六)，缺失html
+- 2012-11; 2012-12，缺失html
+- 2013-01; 2013-02，缺失html
+
+2014年及以后：采用人民币和美元双币值
+
+- 2014-12， 无【美元值】。而且【人民币值】比较独特的页面形式。
+- 2015-12. 44 VS 22. 很奇怪。
+- 2016-01，缺所有html，不过可以从2月找补回来。
+- 2018-05;2018-06;2018-11：缺所有html
+- 2019-02;2019-06;2019-09;2019-10：缺所有html
+
+
+
+## 3.3导出html为对应的csv文件
+
+### 函数0：基础函数
+
+```{r}
+# function for count white spaces
+countWhiteSpaces <- function(x) attr(gregexpr("(?<=[^#])[#]+(?=[^#])", x, perl = TRUE)[[1]], "match.length")
+
+# function for seek the whitespace style
+###install.packages("mgsub")
+###library("mgsub")
+str_seek <- function(strs, style=n_style,rep=n_rep){
+  out <- mgsub::mgsub(strs, pattern = style, replacement =rep,perl = F)
+  return(out)
+}
+
+
+# function for calculate vector modes
+getModes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  ux[tab == max(tab)]
+}
+```
+
+### 函数1：得到网页表格
+
+```{r}
+#web_url <- tbl_ym$path_file[1]
+#x_tbl <- path_tbl
+
+get_rawpage <- function(web_url,x_tbl=path_tbl){
+    # the html source file declares gb2312
+  page_raw <- read_html(web_url,encoding = "UTF-8") %>%
+    html_nodes(xpath = x_tbl) %>%
+    html_table(., fill=T, trim=T) %>%
+    .[[1]] %>%
+    # substitute all the white space with #
+    mutate(X1=gsub("\u00A0", "#", X1)) %>%
+    # handle erro word
+    mutate(X1=gsub("类早|类童", "类章", X1, perl = F))  %>%   # 2017-01-t06
+    mutate(X1=gsub("第食品", "第4类食品", X1, perl = F)) %>%  # 2011-02-t19
+    mutate(X1=gsub("第埃动", "第3类动", X1, perl = F)) %>%       # 2011-02-t13
+    mutate(X1=gsub("(俄罗斯.+?联邦)", "俄罗斯联邦", X1, perl = F)) %>%  # 2016-08-c87-t17\ 2016-08-c87-t18
+    mutate(X1=gsub("(?<=中国).+?(?=台湾|香港|澳门)","", X1, perl=T)) # 2016-10/11
+  
+  return(page_raw)
+}
+
+
+
+```
+
+
+### 函数2：得到数据表格
+
+```{r}
+#page_raw <-rawpage
+# first occurrence [upper talbe of two part]
+get_rawtable <- function(page_raw){
+  # detect the start and end row
+  row_first <-  which(str_detect(page_raw$X1,"总值#|第.+?"))
+  row_last <-  which(str_detect(page_raw$X1,"摘编"))
+  
+  if (length(row_last)==1){  # case for 摘编
+    range <- row_first[1]:(row_last-1)
+  } else {                    # case no 摘编
+    range <- row_first[1]:nrow(page_raw)
+  }
+  
+  tbl_raw <- page_raw %>%
+    # delete rows unnecessary
+    .[range,]  %>%
+    # substitute the white space
+    gsub("(?<=类|章)(#{1,5})(?=[\\p{Han}])", "", ., perl = T) %>%
+    # substitute the number comma
+    gsub("(?<=\\d)(\\,{1})(?=\\d)", "", ., perl = T) %>%
+    # handle spc number format
+    gsub("#\\?", "", ., perl = F) %>%  # 2012-04-t02
+    as_tibble()
+  return(tbl_raw)
+}
+
+```
+
+### 函数3：核验原始表格
+
+```{r}
+#dt <- rawpage
+# check styles
+tbl_check <- function(tbl_raw){
+  tbl_dt <- tbl_raw %>%
+  mutate(n=map(.x = value, .f = countWhiteSpaces)) %>%
+  mutate(len = lengths(n), 
+         min=map(.x=n, .f=min), 
+         max=map(.x=n, .f=max), 
+         mode=map(.x = n, .f = getModes))
+}
+
+#check <- tbl_check(rawpage)
+
+```
+
+
+### 函数4：得到清洗后的表
+
+```{r}
+#tbl_check <- check
+# obtain the table output
+get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
+  len_max <- tbl_check %>% .$len %>% unlist() %>% max()
+  tbl_seek <- tbl_check %>%
+    mutate(str= if_else(
+      len==len_max,gsub("(#){1,50}", "&", value, perl = F), # for full len
+      mgsub::mgsub(value, pattern = style, 
+                   replacement =rep, perl = F) # for other
+      ) ) %>%
+    select(str) %>%
+    #mutate(str= str_replace(str, "-", "NA")) %>%
+    separate(str,into = vars_eng, sep = "&")  %>%
+    mutate_at(all_of(vars_eng[-1]), .funs = as.numeric, digits=2)
+}
+
+```
+
+
+
+### 提取csv文件：按月份提取，统一格式
+
+我们重点关注如下章的相关农产品：
+
+```
+第一类 活动物；动物产品
+  01章 活动物
+  02章 肉及食用杂碎
+  03章 鱼、甲壳动物、软体动物及其他水生无脊椎动物
+  04章 乳品；蛋品；天然蜂蜜；其他食用动物产品
+
+第二类 植物产品
+  07章 食用蔬菜、根及块茎
+  08章 食用水果及坚果；甜瓜或柑桔属水果的果皮
+  10章 谷物
+  11章 制粉工业产品；麦芽；淀粉；菊粉；面筋
+
+第三类  动、植物油、脂及其分解产品；精制的食用油脂；动、植物蜡
+  15章 动、植物油、脂及其分解产品；精制的食用油脂；动、植物蜡
+
+第六类 化学工业及其相关工业的产品
+  31章 肥料
+
+第十一类 纺织原料及纺织制品
+  51章 羊毛、动物细毛或粗毛；马毛纱线及其机织物
+  52章 棉花
+```
+
+#### 异常提示
+
+**异常页面信息**（需要额外处理）：
+
+- 类章序号不一致。第1类;第01类。 `2000-04`。
+
+- 处理有空格。`gsub("(?<=类|章)(#{1,5})(?=[\\p{Han}])", "", ., perl = T) `
+
+- 词语错误。`mutate(X1=gsub("类早|类童", "类章", X1, perl = F))   # 2017-01-t06`
+
+- 词语错误。`mutate(X1=gsub("第食品", "第4类食品", X1, perl = F))     # 2011-02-t19`
+
+- 词语错误。`mutate(X1=gsub("第埃动", "第3类动", X1, perl = F))        # 2011-02-t13`
+
+- 逗点数值。`gsub("(?<=\\d)(\\,{1})(?=\\d)", "", ., perl = T)` 
+    
+- 错误数值。`gsub("#\\?", "", ., perl = F) %>%  # 2012-04-t02`
+
+- 有无"摘编"。会影响表格范围的识别。
+
+- 多种表达符号：`单位：|单位:`
+
+- 国家识别错误。rawpage就解决。办法：regex replace""
+
+    - `中国2016年1-10月香港`：2016-10-c88-t01、2016-10-c88-t02
+    - `中国2016年1-10月澳门`：2016-10-c88-t03、2016-10-c88-t03
+    - `中国2016年1-10月台湾`：2016-10-c88-t09、2016-10-c88-t10
+    - `俄罗斯      联邦`：2016-08-c87-t17\ 2016-08-c87-t18
+
+```
+error_country <- c("中国2016年1-10月台湾",
+                   "中国2016年1-10月香港",
+                   "中国2016年1-11月澳门")
+gsub("(?<=中国).+?(?=台湾|澳门|香港)","", error_country, perl=T)
+```
+
+**手动解决的问题**（必须手动处理）：
+
+- 数据缺失。`2012-04-t02`。  第11类及以后明显比前面少1列（只有15列数据，存在缺失）
+
+- 词语错误。`印度印度尼西亚`，2011-02-t01。`line_country  <- gsub("印度尼西亚", "##印度尼西亚", rawpage$X1[row_country])`
+
+- 单位、国家和月份都在一行。`2011-05`。 需要设置special
+
+- 表格形式变化。2010-12及以后为两部分表。
+
+
+
+
+**手动补数据**
+
+- 两行数据连成一行。2011-02-t05，**处理办法**：不处理。丢失四国在第04章的数据。
+
+- 信息重复，而且不一致。2016-08-c87-t19.html 和2016-08-c87-t20.html表头一样，但数据不一样。影响乌克兰、阿根廷、巴西、智利四国数据。**处理办法**：把t19直接删除。人工识别应该t19是表的第一部分。
+
+- 数据多出一部分。美国在同一个月份多出现了一次。2016-08-c88-t13/t14 出现美国。2016-08-c88-t21/t22又再次出现一次。**处理办法**：暂时不管。
+
+- 数据缺失。2016-11-c94-t16.html 数据框空白。没办法！
+
+```
+阿曼、巴基斯坦、菲律宾、沙特阿拉伯 四国
+  03章鱼及其他水生无脊椎动物                                   -         252        -            -           12347      33141       221            840   04章乳;蛋;蜂蜜;其他食用动物产品                              73        103        -            -           -          3           53             128      
+```
+
+<!---
+  ###  special 2011-02-t01
+   line_country  <- gsub("印度尼西亚", "##印度尼西亚", rawpage$X1[row_country]) 
+  list_country <- unlist(str_extract_all(line_country, "(?<=#)([\\p{Han}]{1,15})")) # all countries
+  n_country <- length(list_country)
+---> 
+  
+<!---  
+  ### special 2011-05
+  row_cur <- which(str_detect(rawpage$X1,"单位：|单位:"))
+  line_spc <- rawpage$X1[row_cur]
+  line_split <- unlist(str_split(line_spc, "\\@"))
+  unit_cur <- str_extract(line_split[1], "(?<=单位：|单位:)(.+)")
+  list_country <- unlist(str_extract_all(line_split, "(?<=~)([\\p{Han}]{1,15})"))
+  n_country <- length(list_country)
+--->  
+
+
+#### 抓取操作
+
+
+```{r}
+# load pkgs
+library("xml2")
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+#--------------------------
+# this chunk should run only once
+#--------------------------
+
+# files html path
+files_dir <- here::here("data", "v8", "03-trade-custom", "04-tbl15-country-export","html-02-sooshu")
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+
+# table the files
+tbl_files <- tibble(name_file=files_html) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(sheet = str_extract(name_file, "(?<=t)(\\d{2})"),
+         cur   = str_extract(name_file, "(?<=c)(\\d{2})")) %>%
+  mutate(path_file = paste0("html-02-sooshu/", name_file)) 
+
+# check
+check_sum <- tbl_files %>%
+  group_by(year, month, cur) %>%
+  summarize(n=n())
+  
+# list selected cat
+list_big <- c(1:4)
+list_small <- c(1:24,31,50:52)
+list_cat <- c("总值",
+              paste0("第", list_big, "类"),
+              paste0("第", str_pad(list_big, width = 2, pad = "0"), "类"),
+              paste0(str_pad(list_small, width = 2, pad = "0"), "章"))
+
+# xpath for data table
+path_tbl<-"/html/body/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/table"
+
+# set pars for seek whitespace style
+  n_start <- c(61,51,41,1) # not zero
+  n_end <-  c(70,60,50,40)
+  n_style <- paste0("(#){", n_start, ",", n_end, "}")
+  n_rep <-  c("&&&&","&&&", "&&", "&" )
+  
+i <- 2016
+j <- 8
+k <- 20
+for (i in 2016:2016) {
+  for (j in c(11,11)) {
+    # filter year and month
+    tbl_ym <- tbl_files %>%
+      filter(year==i, month==str_pad(j, width = 2, pad = "0"))
+    i_len <- nrow(tbl_ym)
+  
+   
+tbl_out <- NULL
+num_country <- 0
+# loop to export all csv files
+for (k in 1:i_len) {
+  # obtain raw page
+  rawpage <- get_rawpage(web_url = tbl_ym$path_file[k],
+                         x_tbl=path_tbl)  
+  
+  # obtain the currencies and country
+  line_type <- "normal"          # you should specify the type according the html
+  if (line_type=="special"){     # 2011-05
+    ### special line contain both currency, country, and month
+    row_cur <- which(str_detect(rawpage$X1,"单位：|单位:"))
+    line_spc <- rawpage$X1[row_cur]
+    line_split <- unlist(str_split(line_spc, "\\@"))
+    unit_cur <- str_extract(line_split[1], "(?<=单位：|单位:)(.+)")
+    list_country <- unlist(str_extract_all(line_split, "(?<=~)([\\p{Han}]{1,15})"))
+    n_country <- length(list_country)
+  } else if (line_type=="normal"){
+    # detect the currencies
+    row_cur <- which(str_detect(rawpage$X1,"单位：|单位:"))
+    unit_cur <- str_extract(rawpage$X1[row_cur], "(?<=单位：|单位:)(.+)")
+    # detect the country
+    exist_detect <- str_detect(rawpage$X1,"类章##")
+    
+    if (any(exist_detect)) {
+      row_country <- which(exist_detect)
+      line_country <- rawpage$X1[row_country]
+    } else {
+      row_country <- row_cur + 1
+      line_country <- paste0("#", line_country)
+      line_country <- rawpage$X1[row_country]
+      line_country <- paste0("类章##", line_country)  # add the leading character
+    }
+    line_country  <- gsub("\\s*", "", line_country) # remove the chinese whitespace
+    ### only for 2011-02-01
+    #line_country  <- gsub("印度尼西亚", "##印度尼西亚", rawpage$X1[row_country]) 
+    list_country <- unlist(str_extract_all(line_country, "(?<=#)([\\p{Han}]{1,15})")) # all countries
+    n_country <- length(list_country)
+  }
+  
+  # obtain data table
+  tbl_raw <- get_rawtable(page_raw =  rawpage)
+    
+  # check the style 
+  check <-tbl_check(tbl_raw = tbl_raw)
+  #### check by hand
+  # table(unlist(check$n))
+    
+  # create names
+  names_eng <- c("V0", paste0("V",1:(2*n_country) ))
+  
+  # obtain the split table
+  tbl_split <- get_split(tbl_check = check) %>%
+    select(all_of(names_eng))
+ 
+  # tidy the data table
+  tbl_cat <-  tbl_split %>%
+    mutate(cat=str_extract(V0, "(总值)|(.*?类)|(.*?章)")) %>%
+    filter(cat %in% list_cat) %>%
+    select(cat, all_of(names_eng[-1]))
+  
+  # separate A and B
+  name_cp <- paste0(rep(list_country, each=2), 
+                    rep(c("_A", "_B"),times=n_country))
+  tbl_AB <- tbl_cat %>%
+    rename_at(all_of(names_eng[-1]), ~name_cp ) %>%
+    gather(key="country_period", value="value", -cat) %>%
+    separate(col = country_period, into = c("country", "period")) %>%
+    add_column(year= i, .before = "cat") %>%
+    add_column(month= str_pad(j, width = 2, pad = "0"), .after = "year") %>%
+    add_column(currency = unit_cur, .after = "month") %>%
+    add_column(files=tbl_ym$name_file[k])
+  # check actual rows and theory rows
+  rows_act <- nrow(tbl_AB) 
+  
+  # print message
+  print(paste0(i,"年", j, "月。第",k , "个html页面，共", i_len , "个html页面"))
+  print(paste0("此页面实际数行=", rows_act))
+  
+  # combine 
+  tbl_out <- bind_rows(tbl_out, tbl_AB)
+  # accumulate countries in each page
+  num_country <- num_country + n_country
+}
+
+  # check actual rows and theory rows
+  rows_act <- nrow(tbl_out) 
+  
+  if (i_len < 15){
+    rows_theory <- (length(list_cat)-4)*num_country*2        # one part table
+  } else {
+    rows_theory <- (length(list_cat)-4)*num_country*0.5*2         # two part table
+  }
+  
+  if (rows_theory == rows_act) {
+    print(paste0(i,"年", j, "月。恭喜！实际数据点数与理论一致！数据点数=", rows_act))
+  } else {
+    print(paste0(i,"年", j, "月。不妙！实际数据点数与理论不一致！实际数=", rows_act, ";理论数=", rows_theory))
+  }
+  
+  # checking when there were inconsistent
+  ttt <- tbl_out %>%
+    group_by(country, period) %>%
+    summarize(n=n())
+  
+  # wait to see the result
+  Sys.sleep(10)
+  
+  #if (rows_theory != rows_act) stop("请检查，数据量与预期不一致！")
+  
+  # files csv path
+  path_csv <- paste0("csv-sooshu/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+  write.csv(tbl_out, path_csv, row.names = F)
+  }
+}
+
+
+```
+
+
+## 3.4合并全部csv表格有效数据
+
+
+```{r, eval=FALSE, echo=FALSE}
+# set for chinese header
+vars_chn <- c("年度","月份", "序号","类章序号","类章名目" ,
+             "出口_当月", "出口_累计","进口_当月", "进口_累计",
+             "累计同期变动_出口","累计同期变动_进口")
+vars_eng <- c("Year","Month", "ID",
+             "cat", paste0("X", 1:7))
+cat_list <- paste0(str_pad(c(1:4,7:8,10:11,15,31,51:52), width = 2, pad = "0"),
+                   "章")
+
+# files path
+csv_dir <- here::here("data", "v8", "03-trade-custom","04-tbl15-country-export", "csv-sooshu")
+csv_files <- list.files(str_c(csv_dir,"/"))
+csv_url <- str_c(csv_dir, csv_files, sep = "/")
+
+
+# i <-1 length(csv_files)
+tbl_out <- NULL
+for (i in 1:length(csv_files)) {
+  path_csv <- csv_files[i]
+  
+  # table for checking with the csv file
+  tbl_tem <- read.csv(csv_url[i], header = T) 
+  # row bind 
+  tbl_out <- bind_rows(tbl_out, tbl_tem)
+  print(csv_files[i])
+}
+
+# checking when there were inconsistent
+ttt <- tbl_out %>%
+  group_by(currency ) %>%
+  summarize(n=n())
+
+tbl_bad <- tbl_out %>%
+  filter(country=="中国")
+
+# replace the country name 
+tbl_tidy <- tbl_out %>%
+  # tidy the country name
+  mutate(country = str_replace(country, ("(?!芬兰)(芬)|(分兰)"), "芬兰")) %>%
+  mutate(country = str_replace(country, ("阿克廷"), "阿根廷")) %>%
+  mutate(country = str_replace(country, ("奧地利"), "奥地利")) %>%
+  mutate(country = str_replace(country, ("力口拿大"), "加拿大")) %>%
+  mutate(country = str_replace(country, ("马来两亚"), "马来西亚")) %>%
+  mutate(country = str_replace(country, ("欧洲眹盟"), "欧洲联盟")) %>%
+  mutate(country = str_replace(country, ("新加皮"), "新加坡")) %>%
+  mutate(country = str_replace(country, ("(?!意大利)意大"), "意大利")) %>%
+  mutate(country = str_replace(country, ("(台湾省)"), "中国台湾")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(台湾)"), "中国台湾")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(澳门)"), "中国澳门")) %>%
+  mutate(country = str_replace(country, ("^(?!中国)(香港)"), "中国香港")) %>%
+  # tidy the cat
+  mutate(cat = str_replace(cat,"(第)(\\d{1}类)", "\\10\\2")) %>%
+  # tidy the currency
+  mutate(currency = str_replace(currency, ("(兀)|(元#)"), "元")) %>%
+  mutate(currency = str_replace(currency, ("(万元)"), "万")) %>%
+  mutate(currency = str_replace(currency, ("(?!千美元)(千美)"), "千美元")) %>%
+  # add source
+  add_column(source="sooshu")
+
+
+### check the unique country
+# unique(tbl_tidy$cat)
+# gsub("(第)\\d{1}(类)", "\\10")
+
+
+```
+
+
+
+## 3.5写出有效数据
+
+```{r}
+path_out <- str_c("source02-sooshu-tbl15-country-export-", Sys.Date(),".csv")
+write.csv(tbl_tidy, path_out, row.names = F)
+```
+

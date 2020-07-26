@@ -1,0 +1,578 @@
+---
+title: "农产品进出口数据"
+author: "胡华平"
+date: "2020/6/24"
+output: html_document
+---
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+# V8-01-trade-china 农产品进出口数据
+
+
+
+## 资料来源01：《中国农业年鉴》
+
+- 搜数网（[中国人大权限](http://www.lib.ruc.edu.cn/info/71358.jspx)）
+
+- 中国知网-统计年鉴库 [《中国统计年鉴》](http://nianjian.cnki.net/d_yb.aspx?keywords=%u4E2D%u56FD%u519C%u6751%u7EDF%u8BA1%u5E74%u9274)
+
+
+## 指标和变量
+
+### 全国主要农产品进出口量值
+
+- 指标（数据列）：包括数量和金额
+
+- 样本单位（数据行）：农产品
+
+- 可获取数据的年限：2000-2013年。2013年以后没有再统计和发布。
+
+- 搜数标题："中国2001年主要农产品进出口量值统计(4255字)"
+
+### 各地区农产品进出口总值
+
+- 指标（数据列）：金额
+
+- 样本单位（数据行）：各地区
+
+- 可获取数据的年限：2002-2013年
+
+- 搜数标题："中国2005年各地区农产品进出口总值统计(4174字)"
+
+
+### 各地区主要农产品进出口贸易情况
+
+- 指标（数据列）：包括数量和金额
+
+- 样本单位（数据行）：各地区
+
+- 可获取数据的年限：2002
+
+- 搜数标题："中国2002年各地区主要农产品进出口贸易情况统计（一）/（二）"
+
+
+
+- 2016-2018: 
+    - 一张表；一部分
+
+- 2013-2015 
+    - 三张表；一部分
+
+- 2008-2012
+    - 一张表；一部分
+
+- 2007 
+    - 两张表；一部分
+
+- 2006
+    - 一张表；一部分
+
+- 2005 
+    - 三张表；一部分
+    
+- 2002-2004：
+    - 一张表；上下两部分
+
+
+- 2000-2001：
+    - 一张表；上中下三部分
+
+
+## 一次性抓取
+
+特定符号计数的函数设计 [参考](https://www.reddit.com/r/rstats/comments/2th8ic/function_to_count_the_number_of_white_spaces/)
+
+众数的函数设计[参考](function modes(https://stackoverflow.com/questions/2547402/is-there-a-built-in-function-for-finding-the-mode))
+
+
+1维数据拆分（1 dimmesion segmentation or natural breaks）方法[参考](https://stackoverflow.com/questions/11513484/1d-number-array-clustering)：
+
+## 基础函数
+
+```{r}
+# function for count white spaces
+countWhiteSpaces <- function(x) attr(gregexpr("(?<=[^#])[#]+(?=[^#])", x, perl = TRUE)[[1]], "match.length")
+
+# function for seek the whitespace style
+###install.packages("mgsub")
+###library("mgsub")
+str_seek <- function(strs, style=n_style,rep=n_rep){
+  out <- mgsub::mgsub(strs, pattern = style, replacement =rep,perl = F)
+  return(out)
+}
+
+
+# function for calculate vector modes
+getModes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  ux[tab == max(tab)]
+}
+```
+
+
+## 操作性函数
+
+
+```{r}
+# first occurrence [upper talbe of two part]
+get_rawpage <- function(web_url,x_tbl=path_tbl){
+    # the html source file declares gb2312
+  tbl_raw <- read_html(web_url,encoding = "gb2312") %>%
+    html_nodes(xpath = x_tbl) %>%
+    html_table(., fill=T, trim=T) %>%
+    .[[1]] %>%
+    # substitute all the white space with #
+    mutate(X1=gsub("\u00A0", "#", X1)) 
+  
+  # detect the start and end row
+  first_end <- which(str_detect(tbl_raw$X1,"北京|新疆|新驰"))
+  range <- (first_end[1]-1):first_end[2]
+  
+  tbl_dt <- tbl_raw %>%
+  # delete rows unnecessary
+    .[range,] %>%
+    as_tibble()
+  
+  return(tbl_dt)
+}
+
+# first occurrence [upper talbe of two part]
+get_rawpage_lower <- function(web_url,x_tbl=path_tbl){
+    # the html source file declares gb2312
+  tbl_raw <- read_html(web_url,encoding = "gb2312") %>%
+    html_nodes(xpath = x_tbl) %>%
+    html_table(., fill=T, trim=T) %>%
+    .[[1]] %>%
+    # substitute all the white space with #
+    mutate(X1=gsub("\u00A0", "#", X1)) 
+  
+  # detect the start and end row
+  first_end <- which(str_detect(tbl_raw$X1,"北京|新疆"))
+  range <- (first_end[3]-1):first_end[4]
+  
+  tbl_dt <- tbl_raw %>%
+  # delete rows unnecessary
+    .[range,] %>%
+    as_tibble()
+  
+  return(tbl_dt)
+}
+
+# first occurrence [upper talbe of two part]
+get_rawpage_spc <- function(web_url,x_tbl=path_tbl, spc=1){
+    # the html source file declares gb2312
+  tbl_raw <- read_html(web_url,encoding = "gb2312") %>%
+    html_nodes(xpath = x_tbl) %>%
+    html_table(., fill=T, trim=T) %>%
+    .[[1]] %>%
+    # substitute all the white space with #
+    mutate(X1=gsub("\u00A0", "#", X1)) 
+  
+  # detect the start and end row
+  first_end <- which(str_detect(tbl_raw$X1,"北京|新疆"))
+  n_part <- length(first_end)/2
+  
+  if(spc > n_part){
+    print(paste0("Error: specification of ",spc, "is larger than ", n_part))
+  } else {
+    range <- (first_end[(2*spc -1)]  ):first_end[2*spc] #  如有"全国"，则起始要减去1
+  }
+  
+  tbl_dt <- tbl_raw %>%
+  # delete rows unnecessary
+    .[range,] %>%
+    as_tibble()
+  
+  return(tbl_dt)
+}
+
+
+# check styles
+tbl_check <- function(dt){
+  tbl_dt <- dt %>%
+  # match and replace all '-' after any chinese character
+  mutate(value=gsub("(?<=[\\p{Han}])#{1}", ")#", value, perl = T)) %>% 
+  mutate(n=map(.x = value, .f = countWhiteSpaces)) %>%
+  mutate(len = lengths(n), 
+         min=map(.x=n, .f=min), 
+         max=map(.x=n, .f=max), 
+         mode=map(.x = n, .f = getModes)) %>%
+  mutate(value=gsub(")", "",value,fixed = T))
+}
+
+# for the special case when html table contains "38.1112.3" cell
+#### so we know that we should split it into "38.11" and "12.3" 
+#### html case in file:///D:/github/agri-base/data/v2/01-gdp-dq/html-source01/2008.html
+tbl_check_robust <- function(dt){
+  tbl_dt <- dt %>%
+    # robust regex match and group replace
+    mutate(value=gsub("(?<=\\.)(\\d{2})(\\d{2})(?=\\.)", "\\1###\\2", value, perl = T)) %>%
+    # match and replace all '-' after any chinese character
+    mutate(value=gsub("(?<=[\\p{Han}])#{1}", ")#", value, perl = T)) %>% 
+    mutate(n=map(.x = value, .f = countWhiteSpaces)) %>%
+    mutate(len = lengths(n), 
+           min=map(.x=n, .f=min), 
+           max=map(.x=n, .f=max), 
+           mode=map(.x = n, .f = getModes)) %>%
+    mutate(value=gsub(")", "",value,fixed = T)) %>%
+    mutate(value=gsub(")", "",value,fixed = T))
+}
+
+
+# identify numbers of columns 
+get_cols <- function(dt){
+  row_perfect <-  which(dt$len==max(dt$len))[1]
+  n_vars <- dt %>%
+    #as_tibble() %>%
+    .[row_perfect,1] %>%
+    mutate(value=gsub("(#){1,50}", ";", value, perl = F)) %>%
+    str_split(., ";") %>%
+    unlist() %>%
+    length()
+  vars_eng <- str_c("V", 1:n_vars)
+  return(vars_eng)
+}
+
+
+# obtain the table output
+get_split <- function(dt, style=n_style, rep =n_rep,vars_eng=names_eng){
+  len_max <- dt %>% .$len %>% unlist() %>% max()
+  tbl_seek <- dt %>%
+    mutate(str= if_else(
+      len==len_max,gsub("(#){1,50}", ";", value, perl = F), # for full len
+      mgsub::mgsub(value, pattern = style, 
+                   replacement =rep,perl = F) # for other
+      ) ) %>%
+    select(str) %>%
+    mutate(str=gsub("全国总计|总计|全国合计|地方合计", "全国", str, perl = F))  %>%
+    mutate(str=gsub("T|s", "", str, perl = F))  %>% # handle character liers
+    mutate(str=gsub("新驰", "新疆", str, perl = F))  %>% # handle character liers
+    separate(str,into = vars_eng, sep = ";")  %>%
+    mutate_at(all_of(vars_eng[-1]), .funs = as.numeric, digits=2)
+}
+
+
+```
+
+# 数据抓取流程
+
+
+
+## 允许多张表，或者一张表分上下，或者有两年
+
+- 2018
+    - 两张表；一年数据；一部分
+    - 2018(1+13) 表头：地区、生产总值、第一产业、第二产业、第三产业、【农林牧渔业、工业、建筑业、批发和零售业、交通运输仓储和邮政业、住宿和餐饮业、金融业、房地产业、其他】、人均地区生产总值(元)、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、指数人均生产总值
+
+- 2016-2017: 
+    - 一张表；一年数据；一部分
+    - 2016-2017(1+22) 表头：地区、生产总值、第一产业、第二产业、第三产业、农林牧渔业、工业、建筑业、批发和零售业、交通运输仓储和邮政业、住宿和餐饮业、金融业、房地产业、其他、人均地区生产总值(元)、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、指数人均生产总值
+
+- 2013-2015 
+    - 三张表；一年数据；一部分
+    - 2014-2015(1+20) 表头：地区、生产总值、第一产业、第二产业、第三产业、农林牧渔业、工业、建筑业、批发和零售业、交通运输仓储和邮政业、住宿和餐饮业、金融业、房地产业、其他、【人均地区生产总值(元)】、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、【指数人均生产总值】
+    - 2013(1+19) 表头 ：地区、生产总值、第一产业、【农林牧渔业】、第二产业、工业、建筑业、第三产业、交通运输仓储和邮政业{<-}、批发和零售业、住宿和餐饮业、金融业、房地产业、其他、【人均地区生产总值(元)】、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、【指数人均生产总值】
+    - 说明：2013年及更早年份，(1)“交通运输仓储和邮政业”在“批发和零售业之前” (2)没有统计“农林牧渔业”一类
+
+- 2008-2012
+    - 一张表；一年数据；一部分
+    - 2012(1+19)：同2013表头
+    - 2008-2011(1+20)  表头：地区、生产总值、第一产业、【农林牧渔业】、第二产业、工业、建筑业、第三产业、交通运输仓储和邮政业{<-}、批发和零售业、住宿和餐饮业、金融业、房地产业、其他、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、【指数人均生产总值】、{人均地区生产总值(元)}、
+
+- 2007 
+    - 两张表；一年数据；一部分
+    - 2007(1+20)：表头同2008-2011
+
+- 2006
+    - 一张表；一年数据；一部分
+    - 2006(1+20)：表头同2008-2011
+
+- 2005 
+    - 三张表；一年数据；一部分
+    - 2005(1+20)：表头同2008-2011
+    
+- 2002-2004：
+    - 一张表；一年数据；上下两部分
+    - 2004(1+19) 表头：地区、生产总值、第一产业、【农林牧渔业】、第二产业、工业、建筑业、第三产业、交通运输仓储和邮政业{<-}、{<批发零售贸易及餐饮业>}、金融保险业、房地产业、其他、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、【指数人均生产总值】、{人均地区生产总值(元)}
+    - 2002-2003(1+26) 表头：地区、生产总值、第一产业、第二产业、工业、建筑业、第三产业、{农林牧渔}、地质勘查业、交通运输仓储{<-}、{<批发零售贸易及餐饮业>}、金融保险业、房地产业、社会服务、卫生体育、教育和文化、科学研究、国家机关、其他、构成第一产业、构成第二产业、构成第三产业、指数生产总值、指数第一产业、指数第二产业、指数第三产业、{人均地区生产总值(元)}
+    - 说明：2004年及更早年份：“批发零售贸易及餐饮业”，实际上包括了后面的两个之类，也即"批发和零售业"与"住宿和餐饮业"
+
+- 2000-2001：
+    - 一张表；一年数据；上中下三部分
+    - 2000-2001(1+26)：表头同2002-2003
+
+```{r}
+
+# files path
+files_dir <- here::here("data", "v2", "01-gdp-dq", "html-source01")
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# specify the year
+year<- 2005
+indx<- str_detect(page_url,paste0(year))
+page<- page_url[indx]
+i_len <- length(page)
+
+
+tbl_out <-NULL
+#--------------------------
+#i<-1
+
+for (i in 1:i_len) {
+  # obtain raw table
+  path_tbl<-"/html/body/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/table"
+  # set total numbers of parts in .html file
+  n_part <- 1
+  # j <-2
+  for (j in 1: n_part){
+    # select which part 
+    spc_part <- j
+    rawpage <- get_rawpage_spc(web_url = page[i],spc = spc_part)  
+    # check the style 
+    check <-tbl_check_robust(rawpage)
+    # check by hand
+    table(unlist(check$n))
+    
+    # set pars for seek whitespace style
+    n_start <- c(39,30,14,1) # not zero
+    n_end <-  c(70,38,29,13)
+    n_style <- paste0("(#){", n_start, ",", n_end, "}")
+    n_rep <-  c(";;;;",";;;", ";;", ";" )
+    # create names
+    n <- length(get_cols(check))
+    names_eng <- str_c("V",i,"_p",spc_part, "_",0:(n-1))
+    
+    if (i==1 & j==1){
+     # obtain the final table
+     tbl_split <- get_split(check) %>%
+        select(all_of(names_eng))
+     } else {
+     tbl_split <- get_split(check) %>%
+        select(all_of(names_eng[-1]))
+     }
+    
+    tbl_out <- bind_cols(tbl_out, tbl_split)
+    print(paste0("the ",i,"th file for the year of ",year, ", part:", spc_part))  
+    
+  }
+}
+
+
+# ------cols index for two years----------
+
+n_tot <- dim(tbl_out)[2]
+cols_latest <- c(1,seq(3,n_tot, by=2))
+cols_past <- c(1,seq(2,n_tot, by=2))
+cols_all <- c(1:n_tot)
+
+#-----decide extract cols with specified year ---------------
+#### reverse case: attention year 2007
+#choice <- "latest"
+#choice <- "past"
+choice <- "all"
+
+# create year and cols index
+if (choice=="all"){
+  year_choice <- year
+  cols_choice <- cols_all
+}else if (choice=="latest"){
+  year_choice <- year
+  cols_choice <- cols_latest
+} else if (choice=="past"){
+  year_choice <- year-1
+  cols_choice <- cols_past
+}
+
+# add year and type convert
+tbl_year <- tbl_out %>%
+  select(all_of(cols_choice)) %>%
+  add_column(Year=year_choice,.before = "V1_p1_0")
+
+# files path
+csv_dir <- here::here("data", "v2", "01-gdp-dq", "csv")
+csv_files <- str_c(csv_dir, 
+                   paste0(year_choice,".csv"), sep = "/")
+
+write.csv(tbl_year, csv_files, row.names = F)
+
+```
+
+
+
+## 确定对应关系
+
+
+### 基本过程：
+
+a. 明确需要的变量指标vars_chn，设定顺序
+b. 正确列出html表格全部标题，并根据vars_chn的顺序进行手工标注。
+    - 不要有额外数值
+    - 可以用查找替换批量操作。顿号(`、`)替换为(`" , "`)。
+c. 对b构建dataframe，得到对应关系
+    - 首先提取得到最终变量的index(id_spc)，也即手工标准的顺序数值。使用`str_extract()`函数。
+    - 同时获得其本身在html中的变量index(id_csv)。使用`rownames_to_column()`函数。
+    - 确保按意图排序，也即按id_spc列进行升序排序
+d. 根据html情况，对上述过程依次进行分组操作。通过采用向量化操作加以实现（`map()`函数和`unnesting()`函数）。    
+
+
+### html分组情况
+
+vars_chn <- c("序号","年份","地区", 
+             1-4 "生产总值", "第一产业", "第二产业", "第三产业", 
+             5-9 "农林牧渔业", "工业", "建筑业", "批发和零售业", "交通运输仓储和邮政业",
+             10-13"住宿和餐饮业", "金融业", "房地产业",  "人均地区生产总值(元)", 
+             14-16"构成第一产业", "构成第二产业", "构成第三产业", 
+             17-20 "指数生产总值", "指数第一产业", "指数第二产业", "指数第三产业")
+
+- 2018(1+13) 表头：0地区、1生产总值、2第一产业、3第二产业、4第三产业、13人均地区生产总值(元)、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业、指数人均生产总值
+
+
+- 2016-2017(1+22) 
+    - 表头：地区、1生产总值、2第一产业、3第二产业、4第三产业、5农林牧渔业、6工业、7建筑业、8批发和零售业、9交通运输仓储和邮政业、10住宿和餐饮业、11金融业、12房地产业、其他、13人均地区生产总值(元)、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业、指数人均生产总值
+
+- 2014-2015(1+20) 
+    - 表头：地区、1生产总值、2第一产业、3第二产业、4第三产业、5农林牧渔业、6工业、7建筑业、8批发和零售业、9交通运输仓储和邮政业、10住宿和餐饮业、11金融业、12房地产业、其他、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业
+
+- 2012-2013(1+19) 
+    - 表头 ：地区、1生产总值、2第一产业、3第二产业、6工业、7建筑业、4第三产业、9交通运输仓储和邮政业、8批发和零售业、10住宿和餐饮业、11金融业、12房地产业、其他、14构成第一产业、15构成第二产业、16构成第三产业{15}、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业
+    - 说明：2013年及更早年份，(1)“交通运输仓储和邮政业”在“批发和零售业之前” (2)没有统计“农林牧渔业”一类
+
+- 2005-2011(1+20)  
+    - 表头：地区、1生产总值、2第一产业、3第二产业、6工业、7建筑业、4第三产业、9交通运输仓储和邮政业、8批发和零售业、10住宿和餐饮业、11金融业、12房地产业、其他、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业、13人均地区生产总值(元)、
+
+- 2004(1+19) 
+    - 表头：地区、1生产总值、2第一产业、3第二产业、6工业、7建筑业、4第三产业、9交通运输仓储和邮政业、8批发零售贸易及餐饮业、11金融保险业、12房地产业、其他、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业、13人均地区生产总值(元)
+    - 说明：2004年及更早年份：“批发零售贸易及餐饮业”，实际上包括了后面的两个之类，也即"批发和零售业"与"住宿和餐饮业"
+
+- 2000-2003(1+26) 
+    - 表头：地区、1生产总值、2第一产业、3第二产业、6工业、7建筑业、4第三产业、5农林牧渔、地质勘查业、9交通运输仓储、8批发零售贸易及餐饮业、11金融保险业、12房地产业、社会服务、卫生体育、教育和文化、科学研究、国家机关、其他、14构成第一产业、15构成第二产业、16构成第三产业、17指数生产总值、18指数第一产业、19指数第二产业、20指数第三产业、13人均地区生产总值(元)
+
+### 代码实现
+
+```{r}
+# needed vars
+vars_spc <- c("生产总值", "第一产业", "第二产业", "第三产业", 
+             "农林牧渔业", "工业", "建筑业", "批发和零售业", "交通运输仓储和邮政业",
+             "住宿和餐饮业", "金融业", "房地产业",  "人均地区生产总值", 
+             "构成第一产业", "构成第二产业", "构成第三产业", 
+             "指数生产总值", "指数第一产业", "指数第二产业", "指数第三产业")
+
+header_list <- list( 
+  header_2000t2003 =  c("1生产总值", "2第一产业", "3第二产业", "6工业", "7建筑业", "4第三产业", "5农林牧渔", "地质勘查业", "9交通运输仓储", "8批发零售贸易及餐饮业", "11金融保险业", "12房地产业", "社会服务", "卫生体育", "教育和文化", "科学研究", "国家机关", "其他", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业", "13人均地区生产总值"),
+  header_2004t2004 = c("1生产总值", "2第一产业", "3第二产业", "6工业", "7建筑业", "4第三产业", "9交通运输仓储和邮政业", "8批发零售贸易及餐饮业", "11金融保险业", "12房地产业", "其他", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业", "13人均地区生产总值(元)"),
+  header_2005t2011 = c("1生产总值", "2第一产业", "3第二产业", "6工业", "7建筑业", "4第三产业", "9交通运输仓储和邮政业", "8批发和零售业", "10住宿和餐饮业", "11金融业", "12房地产业", "其他", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业", "13人均地区生产总值(元)"),
+  header_2012t2013 = c("1生产总值", "2第一产业", "3第二产业", "6工业", "7建筑业", "4第三产业", "9交通运输仓储和邮政业", "8批发和零售业", "10住宿和餐饮业", "11金融业", "12房地产业", "其他", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业"),
+  header_2014t2015 = c("1生产总值", "2第一产业", "3第二产业", "4第三产业", "5农林牧渔业", "6工业", "7建筑业", "8批发和零售业", "9交通运输仓储和邮政业", "10住宿和餐饮业", "11金融业", "12房地产业", "其他", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业"),
+  header_2016t2017 =c("1生产总值", "2第一产业", "3第二产业", "4第三产业", "5农林牧渔业", "6工业", "7建筑业", "8批发和零售业", "9交通运输仓储和邮政业", "10住宿和餐饮业", "11金融业", "12房地产业", "其他", "13人均地区生产总值(元)", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业", "指数人均生产总值"),
+  header_2018t2018 = c("1生产总值", "2第一产业", "3第二产业", "4第三产业", "13人均地区生产总值", "14构成第一产业", "15构成第二产业", "16构成第三产业", "17指数生产总值", "18指数第一产业", "19指数第二产业", "20指数第三产业", "指数人均生产总值")
+  )
+
+# function for match
+match_id <- function(dt){
+  dt_match <- dt %>%
+    rownames_to_column(.,var="id_csv") %>%
+    mutate(id_csv=as.numeric(id_csv),
+           id_spc= as.numeric(str_extract(x,"\\d+"))) %>%
+    select(x, id_csv, id_spc) %>%
+    arrange(id_spc) %>%
+    filter(!is.na(id_spc))
+}
+
+# table after match and arrange
+tbl_header <- tibble(header=header_list) %>%
+  mutate(section= names(header)) %>%
+  # the start year
+  mutate(year_min = as.numeric(str_extract_all(section,"(?<=_)\\d{4}"))) %>%
+  # the end year
+  mutate(year_max = as.numeric(str_extract_all(section,"(?<=t)\\d{4}"))) %>%
+  # all years
+  mutate(years = map2(.x = year_min, .y = year_max, .f = function(.x, .y){seq(.x, .y)})) %>%
+  select(section, years, header) %>%
+  # match the index relationship
+  mutate(header=map(.x=header, .f= function(x){as.data.frame(x)})) %>%
+  # match id_csv with id_spc, and order by id_spc
+  mutate(header=map(.x=header, .f= match_id)) %>%
+  unnest(years) 
+
+```
+
+
+## 合并全部csv表格有效数据2
+
+```{r}
+# files path
+csv_dir <- here::here("data", "v2", "01-gdp-dq", "csv")
+csv_files <- list.files(str_c(csv_dir,"/"))
+csv_url <- str_c(csv_dir, csv_files, sep = "/")
+
+# set for chinese header
+vars_chn <- c("序号","年份","地区", 
+              "生产总值", "第一产业", "第二产业", "第三产业", 
+              "农林牧渔业", "工业", "建筑业", "批发和零售业", "交通运输仓储和邮政业",
+              "住宿和餐饮业", "金融业", "房地产业", "人均地区生产总值(元)", 
+              "构成第一产业", "构成第二产业", "构成第三产业", 
+              "指数生产总值", "指数第一产业", "指数第二产业", "指数第三产业")
+
+# i <-2
+tbl_out <- NULL
+for (i in 1:length(csv_files)) {
+  path_csv <- csv_files[i]
+  year <- as.numeric(str_extract(csv_files[i], pattern = "\\d{4}"))
+  
+  tbl_match <- tbl_header %>%  # the match relationship
+    filter(years==year) %>%
+    select(header) %>%
+    unnest(header)
+  index_csv <- tbl_match %>%
+    select(id_csv) %>%unlist()
+  index_match <- tbl_match %>%
+    select(id_spc) %>%unlist()
+  # add additional info
+  index_csv <-c(1:3, 3+index_csv)
+  index_match <-c(1:3, 3+index_match)
+  
+  print(paste0(year,"匹对数量是否相等：",isTRUE(length(index_csv)==length(index_match))))
+ 
+  # table for checking with the html file
+  tbl_select <- read.csv(csv_url[i], header = T) %>%
+    add_column("ID"=1:31, .before = "Year") %>%
+    select(all_of((names(.))[index_csv])) %>% 
+    rename_at(all_of(names(.)), ~all_of(vars_chn[index_match])) 
+   
+  # table fo row combine 
+  vars_key <- c("序号", "年份", "地区")
+  tbl_gather <- tbl_select %>%
+    unite(col = "mainkey",all_of(vars_key), sep="-") %>%
+    gather(key="vars", value="value",-mainkey)
+  
+  # row bind 
+  tbl_out <- bind_rows(tbl_out, tbl_gather)
+}
+
+# spread table 
+tbl_spread <- tbl_out %>%
+  spread(key = vars, value = value, fill = "") %>%
+  separate(col="mainkey", into = c("序号", "年份", "地区"), sep = "-") %>%
+  mutate(`序号`=as.numeric(`序号`), `年份`=as.numeric(`年份`)) %>%
+  arrange(`序号`, `年份`) %>%
+  select(all_of(vars_chn))
+
+```
+
+
+
+## 写出有效数据
+
+```{r}
+path_out <- str_c("tab-gdp-dq", Sys.Date(),".csv")
+write.csv(tbl_spread, path_out, row.names = F)
+```
+

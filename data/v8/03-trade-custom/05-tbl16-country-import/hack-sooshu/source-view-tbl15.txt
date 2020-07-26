@@ -1,0 +1,907 @@
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>Welcome ChinaINFOBANK</title>
+<STYLE>
+A.fa:link {TEXT-DECORATION: none; color: #ffffff}
+A.fa:visited {TEXT-DECORATION: none; color: #ffffff}
+A.fa:hover {TEXT-DECORATION: none; color: #ffffff}
+.90V {FONT-SIZE: 12px; FONT-FAMILY: 宋体}
+.90VE {FONT-SIZE: 9pt; FONT-FAMILY: arial}
+.110V {FONT-SIZE: 14px; FONT-FAMILY: 宋体}
+TD,select,button,input {FONT-SIZE: 9pt; FONT-FAMILY: 宋体}
+</STYLE>
+<STYLE type=text/css>
+A:link {COLOR: #003399; TEXT-DECORATION: none}
+A:visited {COLOR: #800080; TEXT-DECORATION: none}
+A:hover {COLOR: #ff3300; TEXT-DECORATION: none}
+</STYLE>
+</head>
+
+<body TOPMARGIN="2" LEFTMARGIN="2" RIGHTMARGIN="2" MARGINWIDTH="2" MARGINHEIGHT="2" bgcolor="#FFFFFF">
+<div align="center">
+  <center>
+  <table border="0" width="770" cellspacing="0" cellpadding="2">
+    <tr>
+      <td align="center" width="180"><a href="/irisbin/adhit.dll?ad_fix?ad_id=LU1&ad_linker=http://www.infobank.cn/" target="_blank"><img src="/irisweb/Image/nlogo.GIF" border="0" alt="logo"></a><!-- (l1)--></td>
+      <td align="right"> <!-- top ad --></td>
+    </tr>
+  </table>
+  </center>
+</div>
+<div align="center">
+  <center>
+  <table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#003399">
+    <tr>
+       <td width="150" valign="middle" align="center"><font class="90VE" color="#FFFFFF"><b><a class=fa href="/">INFOBANK.CN</a></b></font></td>
+       <td width="620" align="right" valign="middle"><font class="90V" color="#FFFFFF">|<a class="fa" href="http://122.5.51.242/skip.htm">简体主页</a>|<a class="fa" href="http://122.5.51.241:8083/gate/big5/122.5.51.242/">繁体主页</a>|<a class="fa" href="/infobank.htm">返回主页</a>|<a class="fa" href="/irisbin/myinfo.dll?default">我的天地</a>|<a class="fa" href="/irisweb/html/intro.htm">中国资讯行</a>|<a class="fa" href="/irisweb/html/Personal.htm" target="_blank">在线帮助</a>|<a class="fa" href="/irisweb/html/sitemapn.htm">网站导航</a>|<a class="fa" href="/irisbin/login.dll?ByeBye">退出服务</a>|</font></td>
+    </tr>
+  </table>
+</center>
+</div>
+<div align="center">   
+  <center>   
+      <table border="0" width="770" cellspacing="0" cellpadding="0">            
+        <tr>            
+          <td width="1" bgColor="#ffffff"><img height="1" alt="" src="/irispage/images/1pt.gif" width="1" border="0"></td>            
+        </tr>            
+      </table>          
+  </center>    
+</div>    
+<div align="center">
+<!--  
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">资讯服务</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=CNNS">RealTime China</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/gp_cx.dll">中港证券资讯</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/select.dll?special?db=HK">中国经济新闻库</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/dir/baogao/bg00.htm">中国商业报告库</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/dir/stat/t000.htm">中国统计数据库</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/dir/qiye/q000.htm">中国公司企业产品库</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/dir/law/L000.htm">中国法律法规库</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/select.dll?SelectDB">更多资讯服务</a></td>
+</tr><tr><td colspan='2' height='5'></td></tr>
+
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">注册服务</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/login.dll?Portal">会员登录</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/login.dll?ByeBye">退出服务</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/infobank.htm">本网站的主页</a></td>
+</tr><tr>   <td  colspan="2" width="155" height="72" valign="middle" align="center" >
+     <a href="/irisbin/adhit.dll?ad_fix?ad_id=RUU1&ad_linker=/irisweb/dataintro/chinese-1.htm" target="_blank"><img src="/Image/dbintro.gif" border="0" width="120" height="60" alt="ad"></a>
+  </td></tr><tr> <td colspan="2" width="140" height="2"></td> </tr><tr><td colspan='2' height='5'></td></tr>
+
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">商业辅助工具</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/index.html">中国要人</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/importweb.htm">商业网站导航</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/goverment.htm">政府网站导航</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/select.dll?HotIndustriesMenu">热点行业百日动态</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/sjjr.dll">国际金融数据</a></td>
+</tr><tr><td colspan='2' height='5'></td></tr>
+
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">合作专栏</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=jjrb">经济日报</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=TXXX">中国通信信息</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=SINO">赛诺市场研究</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=nyxx">农业部信息中心</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=SYXX">北京商业信息网</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="http://www.chinabig.com.cn">中华大黄页</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=CITI">中国国际经济咨询公司</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=IMI0">IMI市场信息研究所</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=jjwz">机械工业经济信息中心</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=ZGXW">中新社</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=XHUA">新华社</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=ZLXX">中粮富得网</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/search.dll?super?id=JGXX">中国价格信息中心</a></td>
+</tr><tr><td colspan='2' height='5'></td></tr>
+
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">中国资讯行</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/report/cele/index.htm">五周年庆典专辑</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/intro.htm">公司简介</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/adv.htm">广告服务</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irispage/moftec.htm">外经贸部文告代理<font color=red>new</font></a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/gsdt.htm">公司动态</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/sitemapn.htm">网站结构</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/recurit.htm">招聘信息</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisweb/html/contact.htm">联系方式</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/ding.dll">著作权查询</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/dtsp.dll">数据提供商查询</a></td>
+</tr><tr><td colspan='2' height='5'></td></tr>
+
+          <tr>
+            <td colspan="2" width="140" bgcolor="#000099" height="20" nowrap><p align="center"><font color="#ffffff">我的天地</font></td>
+          </tr>
+          <tr>
+            <td colspan="2" width="140" height="5"></td>
+          </tr>
+<tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/myinfo.dll?default">我的资料</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/mynews.dll">我要的新闻</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/nativenews.dll">地区新闻</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/myworld.dll?MyArchives">我的投资档案</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href="/irisbin/udisplay.dll?total">信息卡消费记录</a></td>
+</tr><tr>
+ <td colspan="2" width="140" height="2"></td>
+</tr>
+<tr>
+ <td height="15" width="18">&nbsp;</td>
+ <td height="15" width="122" nowrap><a href=""></a></td>
+</tr> (l2)     <tr>
+     <td colspan="2" width="140" height="6">&nbsp;</td>
+    </tr>
+    <tr>
+     <td colspan="2" width="140" valign="middle" align="center"><a href="/IrisBin/adhit.dll?ad_fix?ad_id=LD1&ad_linker=http://www.irasia.com" target="_blank"><img border="0" src="../Image/irasia.gif"></a></td>
+    </tr>
+    <tr>
+     <td colspan="2" width="140" height="6">&nbsp;</td>
+    </tr> (l3)-->
+<div align="center">   
+  <center>   
+    <script language="JavaScript">
+<!--
+function radioclick(){
+	List=document.schform;
+	if(!List.sch[0].checked && !List.sch[1].checked){
+		List.db.selectedIndex=List.db.length-1;
+		List.tm.selectedIndex=5;
+		List.fd.selectedIndex=2;
+		List.rl.selectedIndex=0;
+	}
+	if(List.sch[0].checked || List.sch[1].checked){
+		if(List.sch[0].checked){
+			List.rl.selectedIndex=0;
+			List.tm.selectedIndex=4;
+		}
+		else{
+			List.rl.selectedIndex=3;
+			List.tm.selectedIndex=5;
+		}
+		List.db.selectedIndex=0;
+		List.fd.selectedIndex=0;
+	}
+}
+function confirm(){
+	List=document.schform;
+	if(List.sch[0].checked || List.sch[1].checked){
+		if(List.db.options[List.db.selectedIndex].value=="##"){
+			alert("请选择要检索的数据库.");
+			return false;
+		}
+		if(List.sch[0].checked && List.tm.options[List.tm.selectedIndex].value=="$"){
+			alert("请选择时间范围.");
+			return false;
+		}
+		if(List.fd.options[List.fd.selectedIndex].value=="##"){
+			alert("请选择检索范围.");
+			return false;
+		}
+		if(List.sch[0].checked){
+			if(List.rl.options[List.rl.selectedIndex].value=="#"){
+				alert("请选择逻辑关系.");
+				return false;
+			}
+		}
+	}
+	else{
+		if(List.rl.options[List.rl.selectedIndex].value=="#"){
+			alert("逻辑关系选项不能为空.");
+			return false;
+		}
+	}
+	return true;
+}
+function dbfocus(){
+	List=document.schform;
+	if(!List.sch[0].checked && !List.sch[1].checked){
+		List.iw.focus();
+	}
+}
+function dbfocus1(){
+	List=document.schform;
+	if(List.sch[2].checked ){
+		List.iw.focus();
+	}
+	if(List.sch[1].checked ){
+		List.db.focus();
+	}
+}
+function dbselect(){
+	List=document.schform;
+	if(List.sch[1].checked){
+		List.db.focus();
+	}
+}
+function CheckCkBox(){
+	var i;
+	var count;
+	url=document.d100.action;
+	url+="?p=";
+	count=0;
+	for(i=1;i<document.d100.length-1;i++){
+		if(document.d100.elements[i].checked){
+			url+=document.d100.elements[i].value;
+			url+="|";
+			count++;
+		}
+	}
+	if(count==0){
+		window.alert("没有选中文献\nNo selected");
+		return false;
+	}
+	url+="&str=";
+	url+=document.d100.str.value;
+	open(url,"","resizable=yes,scrollbars=yes");
+	return false;
+}
+function doit(){
+	if(document.count.Ctrl.value=="0"){
+		document.count.Ctrl.value=document.count.Ctrl.value+1;
+		return true;
+	}
+	return false;
+}
+function formclear(){
+	document.count.Ctrl.value="0";
+	return true;
+}
+//-->
+</script>
+<table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#FFCC00">
+ <tr>
+  <td width="200" align="left"><font color="#000000">&nbsp; 数据库查询</font></td>
+  <td align="left"><font color="#000000">中国统计数据库</font></td>
+  <td align="right"><font color="#000000">中国资讯行提供</font></td>
+ </tr>
+</table>
+<table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#FFCC00">
+
+
+<!-- 本检索引擎由北京北方计算中心研制 Tel:(010)62878217 -->
+
+
+    <tr><td width="25&#37" height="20">　您选择的检索词是</td><td width="75&#37" height="20"><font color="#0000FF">　对部分国家 出口商品类章|海关统计</font></td></tr>
+    <tr><td width="25&#37" height="20">　检索结果</td><td width="75&#37" height="20"><font color="#0000FF">　命中 <font color="red">5102</font> 篇</font></td></tr>
+
+</table>
+<table border="0" width="770" cellspacing="0" cellpadding="0">            
+  <tr>            
+    <td width="1" bgColor="#ffffff"><img height="1" alt="" src="/irispage/images/1pt.gif" width="1" border="0"></td>            
+  </tr>            
+</table>
+<table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#F3F3F3"> 
+<form action="/IrisBin/Search.dll?ReSearch" method="post" name="schform" onSubmit="return confirm()">
+<!-- 检索第一行-->
+ <input type="hidden" name="cmd" value="TJ:@@=对部分国家*出口商品类章;@@=海关统计">
+ <tr>
+  <td width="80" align="center">
+      <input type="radio" name="sch" value="2" checked onClick="radioclick()">重新检索
+  </td>
+  <td align="center">
+      <input type="radio" name="sch" value="1" onClick="radioclick()">同一检索命令在其他库中检索
+  </td>
+  <td align="left">　
+       <input type="radio" name="sch" value="0" onClick="radioclick()">在前次结果中检索
+  </td>
+ </tr>
+</table>
+<table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#F3F3F3">
+<!-- 检索第二行-->
+ <tr>
+  <td align="left">&nbsp;库 选 择&nbsp;<select name="db" size="1" onFocus="dbfocus()" onselect="dbfocus()" onDblClick="dbfocus()" onMouseMove="dbfocus()" onLoad="radioclick()">
+<option value="HK">中国经济新闻库</option>
+<option value="BG">中国商业报告库</option>
+<option value="FL">中国法律法规库</option>
+<option value="TJ" selected>中国统计数据库</option>
+<option value="SS">中国上市公司文献库</option>
+<option value="JK">中国医疗健康库</option>
+<option value="RW">中国人物库</option>
+<option value="WK">English Publications</option>
+<option value="KX">INFOBANK环球商讯库</option>
+<option value="OG">中国中央及地方政府机构库</option>
+<option value="PJ">中国拟建在建项目数据库</option>
+<option value="QY">中国企业产品库</option>
+<option value="HS">香港上市公司资料库 (中文)</option>
+<option value="MC">名词解释库</option>
+
+<option value="##"></option>
+  </select>&nbsp; 时间选择&nbsp;<select name="tm" size="1" onFocus="dbfocus1()" onselect="dbfocus1()" onDblClick="dbfocus1()">
+	<option value="0">一周内</option>
+	<option value="1">一月内</option>
+	<option value="2">三月内</option>
+	<option value="3">一年内</option>
+	<option value="4" selected>全部数据</option>
+	<option value="$"></option>
+  </select>&nbsp; 检索范围&nbsp;<select name="fd" size="1" onFocus="dbfocus1()" onselect="dbfocus1()" onDblClick="dbfocus1()">
+	<option value="@@" selected>全部</option>
+	<option value="TI">标题</option>
+	<option value="##"></option>				
+  </select>&nbsp; 逻辑关系&nbsp;<select name="rl" onFocus="dbselect()" onselect="dbselect()" onDblClick="dbselect()">
+	<option value="*" selected>全部字词出现</option>
+	<option value="+">任意字词出现</option>
+	<option value="!">全部字词不出现</option>
+	<option value="#"></option>
+  </select></td>
+ </tr>
+</table>
+<table border="0" width="770" cellspacing="0" cellpadding="2" bgcolor="#F3F3F3">
+<!-- 检索第三行-->
+ <tr>
+  <td nowrap align="left">&nbsp;输入字词&nbsp;<input type="text" name="iw" size="81" maxlength="60" onFocus="dbselect()" onselect="dbselect()" onDblClick="dbselect()">
+  &nbsp; <input type="submit" value="检　索"></td>
+  <input type="hidden" name="ns" value="50">
+ </tr>
+</table>
+</form>
+<table border="0" width="770" cellspacing="0" cellpadding="0">
+ <tr><td height="1"></td></tr>
+ <tr>
+  <td width="500"><font color="#FF0000">　标题显示：</font>　　　</td>
+  <td width="120"></td>
+ </tr>
+ <tr><td height="1"></td></tr>
+</table>
+<form action="/IrisBin/Text.dll?DisplayMore" method="post" name="d100">
+<input type="hidden" name="str" value="对部分国家+出口商品类章+海关统计">
+
+<table border="0" width="770" cellspacing="0" cellpadding="0">
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p1" value="TJ821534"></td><td width="8&#37" valign="top">5102</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821534&cs=722130&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十二)(7857字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p2" value="TJ821533"></td><td width="8&#37" valign="top">5101</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821533&cs=4766294&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十一)(7826字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p3" value="TJ821532"></td><td width="8&#37" valign="top">5100</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821532&cs=4450954&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十)(7451字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p4" value="TJ821531"></td><td width="8&#37" valign="top">5099</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821531&cs=12018970&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十九)(7459字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p5" value="TJ821530"></td><td width="8&#37" valign="top">5098</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821530&cs=1881585&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十八)(7727字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p6" value="TJ821529"></td><td width="8&#37" valign="top">5097</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821529&cs=3257725&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十七)(7687字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p7" value="TJ821528"></td><td width="8&#37" valign="top">5096</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821528&cs=15235123&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十六)(7403字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p8" value="TJ821527"></td><td width="8&#37" valign="top">5095</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821527&cs=12812580&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十五)(7456字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p9" value="TJ821526"></td><td width="8&#37" valign="top">5094</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821526&cs=15196457&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十四)(7797字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p10" value="TJ821525"></td><td width="8&#37" valign="top">5093</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821525&cs=11722761&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十三)(7739字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p11" value="TJ821524"></td><td width="8&#37" valign="top">5092</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821524&cs=3213237&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十二)(8289字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p12" value="TJ821523"></td><td width="8&#37" valign="top">5091</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821523&cs=3460146&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十一)(7741字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p13" value="TJ821522"></td><td width="8&#37" valign="top">5090</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821522&cs=5754080&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十)(8547字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p14" value="TJ821521"></td><td width="8&#37" valign="top">5089</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821521&cs=14597437&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(九)(8474字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p15" value="TJ821520"></td><td width="8&#37" valign="top">5088</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821520&cs=7476500&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(八)(7698字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p16" value="TJ821519"></td><td width="8&#37" valign="top">5087</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821519&cs=8583515&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(七)(7841字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p17" value="TJ821518"></td><td width="8&#37" valign="top">5086</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821518&cs=4760402&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(六)(7767字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p18" value="TJ821517"></td><td width="8&#37" valign="top">5085</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821517&cs=5592799&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(五)(7829字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p19" value="TJ821516"></td><td width="8&#37" valign="top">5084</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821516&cs=1044883&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(四)(7725字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p20" value="TJ821515"></td><td width="8&#37" valign="top">5083</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821515&cs=8477264&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(三)(7823字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p21" value="TJ821514"></td><td width="8&#37" valign="top">5082</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821514&cs=12373182&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二)(7972字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p22" value="TJ821513"></td><td width="8&#37" valign="top">5081</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821513&cs=13270853&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(一)(8067字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p23" value="TJ821426"></td><td width="8&#37" valign="top">5080</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821426&cs=6734013&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十二)(7728字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p24" value="TJ821425"></td><td width="8&#37" valign="top">5079</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821425&cs=14086242&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十一)(7823字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p25" value="TJ821424"></td><td width="8&#37" valign="top">5078</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821424&cs=7049885&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二十)(7375字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p26" value="TJ821423"></td><td width="8&#37" valign="top">5077</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821423&cs=83337&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十九)(7387字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p27" value="TJ821422"></td><td width="8&#37" valign="top">5076</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821422&cs=4519035&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十八)(7721字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p28" value="TJ821421"></td><td width="8&#37" valign="top">5075</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821421&cs=757083&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十七)(7682字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p29" value="TJ821420"></td><td width="8&#37" valign="top">5074</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821420&cs=1035994&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十六)(7330字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p30" value="TJ821419"></td><td width="8&#37" valign="top">5073</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821419&cs=5200102&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十五)(7450字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p31" value="TJ821418"></td><td width="8&#37" valign="top">5072</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821418&cs=13066393&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十四)(7599字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p32" value="TJ821417"></td><td width="8&#37" valign="top">5071</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821417&cs=3984415&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十三)(7730字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p33" value="TJ821416"></td><td width="8&#37" valign="top">5070</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821416&cs=2652679&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十二)(7535字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p34" value="TJ821415"></td><td width="8&#37" valign="top">5069</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821415&cs=2780276&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十一)(7668字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p35" value="TJ821414"></td><td width="8&#37" valign="top">5068</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821414&cs=12903781&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(十)(8469字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p36" value="TJ821413"></td><td width="8&#37" valign="top">5067</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821413&cs=3145324&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(九)(8469字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p37" value="TJ821412"></td><td width="8&#37" valign="top">5066</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821412&cs=168196&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(八)(7693字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p38" value="TJ821411"></td><td width="8&#37" valign="top">5065</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821411&cs=5822824&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(七)(7714字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p39" value="TJ821410"></td><td width="8&#37" valign="top">5064</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821410&cs=13388261&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(六)(7633字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p40" value="TJ821409"></td><td width="8&#37" valign="top">5063</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821409&cs=8968708&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(五)(7825字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p41" value="TJ821408"></td><td width="8&#37" valign="top">5062</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821408&cs=11740738&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(四)(7719字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p42" value="TJ821407"></td><td width="8&#37" valign="top">5061</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821407&cs=4045658&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(三)(7691字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p43" value="TJ821406"></td><td width="8&#37" valign="top">5060</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821406&cs=4664023&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(二)(7963字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p44" value="TJ821405"></td><td width="8&#37" valign="top">5059</td>
+ <td width="10&#37" valign="top">20191231</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=821405&cs=14906421&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-12月对部分国家(地区)出口商品类章金额统计(一)(7927字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p45" value="TJ820828"></td><td width="8&#37" valign="top">5058</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820828&cs=14051203&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(二十二)(7856字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p46" value="TJ820827"></td><td width="8&#37" valign="top">5057</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820827&cs=7371741&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(二十一)(7826字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p47" value="TJ820826"></td><td width="8&#37" valign="top">5056</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820826&cs=10462612&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(二十)(7445字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p48" value="TJ820825"></td><td width="8&#37" valign="top">5055</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820825&cs=12463887&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(十九)(7458字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p49" value="TJ820824"></td><td width="8&#37" valign="top">5054</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820824&cs=16416618&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(十八)(7726字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+<tr><td width="5&#37" align="center" height="20" valign="top"><input type="checkbox" name="p50" value="TJ820823"></td><td width="8&#37" valign="top">5053</td>
+ <td width="10&#37" valign="top">20191130</td>
+ <td valign="top"><a href="/IrisBin/Text.dll?db=TJ&no=820823&cs=12573746&str=对部分国家+出口商品类章+海关统计" target="_blank">中国2019年1-11月对部分国家(地区)出口商品类章金额统计(十七)(7685字)</a></td>
+ <td width="18&#37" valign="top">精讯数据</td>
+</tr>
+ <!-- DATA -->
+ <tr><td height="4">&nbsp;</td></tr>
+</table>
+<center><input type="button" value="显示所选" onclick="return CheckCkBox()"></center></form>
+
+<table border="0" width="628" cellspacing="0" cellpadding="0">
+ <tr><td height="10">&nbsp;</td></tr>
+ <tr>
+<form action="/IrisBin/Search.dll?Page" method="post">
+  <td height="20">
+  <table border="0" cellpadding="0" cellspacing="0" width="100&#37" height="30">
+   <tr>
+   <td width="25&#37" bgcolor="#F9FCBE" valign="middle" height="19"><p align="center"><a href="/IrisBin/Search.dll?Page?cmd=TJ:@@=对部分国家*出口商品类章;@@=海关统计&pn=1&ns=50">翻下页</a>
+</td>
+   <td width="35&#37" bgcolor="#F9FCBE" valign="middle" height="19"><p align="center">
+共103页　第1页</td>
+</td>
+   <td width="30&#37" bgcolor="#F9FCBE" valign="middle" height="19"><p align="center"><input type="hidden" name="cmd" value="TJ:@@=对部分国家*出口商品类章;@@=海关统计">
+<input type="hidden" name="ns" value=50>
+<input type="submit" value="翻至"> 第
+<select name="pn" style="font-size: 9pt">
+<option selected value=1>2</option>
+<option value=2>3</option>
+<option value=3>4</option>
+<option value=4>5</option>
+<option value=5>6</option>
+<option value=6>7</option>
+<option value=7>8</option>
+<option value=8>9</option>
+<option value=9>10</option>
+<option value=10>11</option>
+<option value=11>12</option>
+<option value=12>13</option>
+<option value=13>14</option>
+<option value=14>15</option>
+<option value=15>16</option>
+<option value=16>17</option>
+<option value=17>18</option>
+<option value=18>19</option>
+<option value=19>20</option>
+<option value=20>21</option>
+<option value=21>22</option>
+<option value=102>末页</option>
+</select>页
+   </td></tr>
+  </table></td>
+</form>
+ </tr>
+ <tr><td height="10">&nbsp;</td></tr>
+</table>
+</BODY>
+
+</HTML> <!-- Data -->
+  </center>    
+</div>
+<br>
+<div align="center">   
+  <center> 
+     <!-- under ad -->
+  </center>    
+</div>
+</body>
+</html>
+
