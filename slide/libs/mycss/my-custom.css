@@ -1,0 +1,124 @@
+
+/* adjust font size */
+
+.remark-slide-content {
+    font-size: 22px;
+    padding: 1em 4em 1em 4em;
+}
+
+
+.page-font-16 {
+  font-size: 16px;
+}
+
+.page-font-18 {
+  font-size: 18px;
+}
+
+.page-font-20 {
+  font-size: 20px;
+}
+.page-font-21 {
+  font-size: 21px;
+}
+
+.page-font-24 {
+  font-size: 24px;
+}
+
+/* Table width = 100% max-width */
+
+.remark-slide table{
+    width: 90%;
+}
+
+/* Change the background color to white for shaded rows (even rows) */
+
+.remark-slide thead, .remark-slide tr:nth-child(2n) {
+    background-color: white;
+}
+
+
+/* footer and header */
+
+div.my-header {
+    background-color: #F77A00;
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%,#ffb76b), color-stop(0%,#ffa73d), color-stop(0%,#ffffff), color-stop(10%,#ffffff), color-stop(25%,#F77A00), color-stop(100%,#F77A00));
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    height: 30px;
+    width: 100%;
+    text-align: left;
+}
+
+div.my-footer {
+    background-color: #272822;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    height: 20px;
+    width: 100%;
+}
+
+div.my-footer span {
+    font-size: 10pt;
+    color: #F7F8FA;
+    position: absolute;
+    left: 15px;
+    bottom: 2px;
+}
+
+/***set slide number***/
+
+.remark-slide-number {
+  font-size: 10pt;
+  margin-bottom: -11.6px;
+  margin-right: 10px;
+  color: #FFFFFF; /* white */
+  opacity: 1; /* default: 0.5 */
+}
+
+
+/***set horizontal scroll***/
+
+pre {
+  background: #FFBB33;
+  max-width: 100%;
+  overflow-x: scroll;
+}
+
+/***set vertical scroll***/
+
+.scroll-box-8 {
+  height:8em;
+  overflow-y: scroll;
+}
+.scroll-box-10 {
+  height:10em;
+  overflow-y: scroll;
+}
+.scroll-box-12 {
+  height:12em;
+  overflow-y: scroll;
+}
+.scroll-box-14 {
+  height:14em;
+  overflow-y: scroll;
+}
+.scroll-box-16 {
+  height:16em;
+  overflow-y: scroll;
+}
+.scroll-box-18 {
+  height:18em;
+  overflow-y: scroll;
+}
+.scroll-box-20 {
+  height:20em;
+  overflow-y: scroll;
+}
+.scroll-output {
+  height: 90%;
+  overflow-y: scroll;
+}
