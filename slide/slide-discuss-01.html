@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>05-simple-reg-eq-forms-slide.utf8</title>
+    <title>slide-discuss-01.utf8</title>
     <meta charset="utf-8" />
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
@@ -126,7 +126,7 @@ layout: true
 
 数据维护，主要涉及到数据更新、数据存放、数据查询和数据下载等。数据更新维护和权限分配管理是关键，基本上按照前述相关说明即可完成，但是需要设定人员角色。
 
-- **数据录入人**：根据任务分工，进行**粒度数据**（包括原始数据和标准数据）收集和处理的人员。
+- **数据录入人**：根据分工，进行**粒度数据**（包括原始数据和标准数据）收集和处理的人员。
 
 - **数据检查人**：下发数据录入任务的人员，应该要对录入人的数据进行基本核查。
 
@@ -151,7 +151,7 @@ layout: true
 
 **协作策略**：
 
-- 按“项目制”进行任务分工和推进。github repo。[见我们的github仓库huhuaping/agri-trade-open](https://github.com/huhuaping/agri-trade-open)。
+- 按“项目制”进行任务分工和推进。github repo。[见我们的github仓库](https://github.com/huhuaping/agri-trade-open)。
 
 - 推广使用现代化协作平台和技术。git分布式命令集。[介绍文档](https://git-scm.com/book/zh/v2)。
 
@@ -182,12 +182,12 @@ layout: true
 
 ## 国内部门网站
 
-- **海关总署**：
+**海关总署**：（后面有重点介绍）
 
-待查询（与统计局数据有差异）
+- 与统计局数据有差异
 
 
-- **农业农村部**数据库
+**农业农村部**数据库：
 
 ```
 （1）种植业
@@ -212,11 +212,8 @@ layout: true
 **其他宏观经济数据库**：总体而言，数据量、查询和使用体验都很不好。
 
 - “中经网”平台
-
 - “塔塔数据”平台
-
 - “国研网”平台
-
 - 其他
 
 ---
@@ -260,6 +257,8 @@ layout: true
 
 主要的相关研究报告（一般会配套数据）：
 
+.scroll-box-18[
+
 ```
 USDA出口销售报告(周)
 USDA出口检验报告(周) 
@@ -284,6 +283,7 @@ USDA世界作物产量报告:预测年度:分地区(月)
 USDA世界作物产销预测:预测年度:分地区(月) 
 USDA牛存栏数报告(半年) USDA世界作物产量:分地区(年)
 ```
+]
 
 ---
 
@@ -400,7 +400,7 @@ layout: true
 
 ---
 
-## 工作现状和后续任务
+## 工作现状
 
 **工作现状**：目前的github项目仓库里的数据主要是中国海关统计的与**44个国家**之间按**类章**统计（人民币或美元计价）的月度进出口金额。存在如下几个不足：
 
@@ -409,15 +409,21 @@ layout: true
 - 目前只有中国与44国的贸易数据，而不是多个国家之间的**贸易矩阵数据**&lt;sup&gt;1&lt;/sup&gt;。
 
 
+.footnote[&lt;sup&gt;1&lt;/sup&gt; *贸易矩阵数据**的具体形式可以看FAO stat的excel。具体见github项目仓库文档：https://github.com/huhuaping/agri-trade-open/tree/master/data/v8/02-trade-fao]
+
+
+---
+
+## 后续任务
+
+
 **后续可能的任务**:
 
 - **数据任务**：可以借助前述其他数据库平台，进一步收集整理新的可能数据集。可以2个人一组分工（.red[讨论并落实人员]）。例如：a.针对具体农产品的贸易数据，可以查找FAO统计数据库。b.针对多个国家之间贸易的**贸易矩阵**问题，可以先从中美两国贸易矩阵开始入手，重点整理美国农业部的数据库。
 
-- **写作任务**：a.目前已经可以开始着手写中国海关数据分析的一篇论文（.red[具体落实到人]）。b.结合国际贸易政策的最新热点，撰写一篇定性分析论文（.red[具体落实到人]）。
+- **写作任务**：a.目前已经可以开始着手写一篇中国海关描述性数据分析的论文（.red[具体落实到人]）。b.结合国际贸易政策的最新热点，撰写一篇定性分析论文（.red[具体落实到人]）。
 
 
-
-.footnote[&lt;sup&gt;1&lt;/sup&gt; *贸易矩阵数据**的具体形式可以看FAO stat的excel。具体见github项目仓库文档：https://github.com/huhuaping/agri-trade-open/tree/master/data/v8/02-trade-fao]
 
 
 ---
