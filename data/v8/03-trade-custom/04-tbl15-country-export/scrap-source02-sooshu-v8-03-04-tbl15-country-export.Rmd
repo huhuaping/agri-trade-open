@@ -200,6 +200,24 @@ pix_move <- mm["max", "x"]-18
 
 Use RSelenium to perform drag-and-drop action [see](https://stackoverflow.com/questions/48970251/use-rselenium-to-perform-drag-and-drop-action)
 
+
+#### 设定登录安全信息
+
+[Hadley Wickham: Managing secrets](https://cran.r-project.org/web/packages/httr/vignettes/secrets.html)
+
+```{r}
+#install.packages("keyring")
+library("keyring")
+
+# make secretes
+keyring::keyring_create("ruc")
+keyring::key_set("usr", keyring = "ruc")
+keyring::key_set("password", keyring = "ruc")
+
+### donot forget to lock the keyring after use
+keyring::keyring_lock("ruc")
+```
+
 #### 滑块验证登录人大图书馆
 
 
@@ -241,8 +259,10 @@ remDr$screenshot(display = TRUE)
 xpath_usr <- "//*[@id='loginform-1']/div[2]/dl[1]/dd/input"
 xpath_psw <- "//*[@id='loginform-1']/div[2]/dl[2]/dd/input"
 
-remDr$findElement("xpath", xpath_usr)$sendKeysToElement(list("user"))
-remDr$findElement("xpath", xpath_psw)$sendKeysToElement(list("password"))
+remDr$findElement("xpath", xpath_usr)$sendKeysToElement(
+  list(keyring::key_get("usr", keyring = "ruc")))
+remDr$findElement("xpath", xpath_psw)$sendKeysToElement(
+  list(keyring::key_get("password", keyring = "ruc")))
 remDr$screenshot(display = TRUE)
 
 # move mouse on upon the form
