@@ -1270,3 +1270,5 @@ path_out <- str_c("source02-sooshu-tbl16-country-import-", Sys.Date(),".csv")
 write.csv(tbl_tidy, path_out, row.names = F)
 ```
 
+
+
