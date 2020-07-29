@@ -412,6 +412,7 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 2003-03~2004-12：省份异常，安徽开头，重庆结尾。
 
 2005-01~2005-12：省份异常，上海开头，黑龙江结尾。
+- 2005-02 pdf格式异常，无法读取。
 
 2006-01：省份排序异常。上海开头，黑龙江结尾。
 
@@ -419,7 +420,7 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 
 
 
-#### 抓取代码
+#### 抓取代码1
 
 ```{r}
 # install.packages("pdftools")
@@ -451,6 +452,8 @@ n_start <- c(61,51,26,1) # not zero
 n_end <-  c(70,60,50,25)
 n_style <- paste0("(#){", n_start, ",", n_end, "}")
 n_rep <-  c("&&&&","&&&", "&&", "&" )
+
+list_province <- c("北京","天津","河北","山西","内蒙古","辽宁","吉林","黑龙江","上海","江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南","广东","广西","海南","重庆","四川","贵州","云南","西藏","陕西","甘肃","青海","宁夏","新疆")
 
 
 
@@ -608,19 +611,171 @@ for (i in 2005:2004) {
   }
 }
 
+```
+#### 抓取代码2
+
+```{r}
+# install.packages("pdftools")
+library("pdftools")
+
+# read backup urls
+tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T) 
+
+# files pdf path
+### you should change the dir according to the purpose
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "01-trade-region","pdf")
+
+
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# table the files
+tbl_files <- tibble(name_file=files_html,
+                    size = round(file.size(page_url)/1024,0)) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(month_num= as.numeric(month)) %>%
+  mutate(path_file = paste0("pdf/", name_file)) 
+
+
+# set pars for seek whitespace style
+n_start <- c(61,51,26,1) # not zero
+n_end <-  c(70,60,50,25)
+n_style <- paste0("(#){", n_start, ",", n_end, "}")
+n_rep <-  c("&&&&","&&&", "&&", "&" )
+
+list_province <- c("北京","天津","河北","山西","内蒙古","辽宁","吉林","黑龙江","上海","江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南","广东","广西","海南","重庆","四川","贵州","云南","西藏","陕西","甘肃","青海","宁夏","新疆")
 
 
 
+i <- 2002
+j <- 2
+k <- 1
 
+# loop years
+for (i in 2017:2019) {
+  # filter year and month
+  tbl_ym <- tbl_files %>%
+    filter(year==i)
 
+  i_len <- nrow(tbl_ym)
+  # loop months
+  for (j in c(1:12)) {
+    # read pdf as text
+    pth<- tbl_ym$path_file[j]
+    txt <- suppressWarnings(suppressMessages(pdf_text(pth)))
+    
+    
+    # focus the pages
+    page_target <- which(str_detect(txt, "北京|新疆"))
+    page_raw <- txt[page_target]
+    if (length(page_raw)==0) stop("pdf文件读取出错，请核实！")
+    
+    # loop province
+    #k <- 22
+    tbl_province <- NULL
+    for (k in 1:length(list_province)){
+      # detect the page which contain certain province
+      page_province <- which(str_detect(txt, list_province[k]))
+      # skip iteration and go to next iteration：k=22 in 2002-2
+      if (length(page_province)==0) {
+        print(paste0(list_province[k], "不在pdf表格中，请核实！"))
+        next
+        }
+    
+      # pattern to obtain data
+      pattern_province <- paste0("(",list_province[k], ".*)(?=\r\n)")
+      
+      dt_province <- str_extract_all(txt[page_target], 
+                                     pattern_province) %>%
+        unlist() %>%
+        as_tibble() %>%
+        mutate(value=gsub(" ", "#", value))%>%
+        mutate(value=gsub(",", "", value)) %>%
+        mutate(value=gsub("%", "", value))
+      
+      check <- check_tbl(dt_province)
+      
+      # create names
+      n_cols <- max(check$len)
+      names_eng <- c("V0", paste0("V",1:n_cols ))
+      
+      
+      tbl_split <- get_split(check,vars_eng = names_eng) %>%
+        add_column(page=page_province)
+      
+      tbl_province <- bind_rows(tbl_province, tbl_split)
+      print(paste0("第",k,"个省：",list_province[k]))
+    }
+    
+    # obtain currency unit:
+      detect_unit <- str_extract(page_raw, "(单位.+)|(金额.+)")[1]
+      
+      currency <- str_extract_all(detect_unit, "(?<=：|单位)(.+)") %>%
+        str_trim(side = "both") %>%
+        str_replace("：", "")
+      if (length(currency)==0) stop("金额单位无法识别，请核实！")
+      tbl_unit <- tibble(page=page_target, currency= currency )
+      
+    
+      # obtain trade type: export or import
+      title_target <- which(str_detect(txt, "表.+分地区"))
+      txt_page <- txt[title_target]
+      detect_title <- str_extract(txt_page, "(表.+分地区.{2}情况)")
+      type <- str_extract(detect_title, ".{2}(?=情况)")
+      if (length(page_raw)==2 & (page_target[1]!=page_target[2])){
+        tbl_title<- tibble(page=page_target, type=type)
+      } else {
+        tbl_title<- tibble(page=title_target, type=type)
+      }
+    
+      tbl_out <- tbl_province %>%
+        left_join(., tbl_unit, by = "page") %>%
+        left_join(., tbl_title, by = "page") %>%
+          add_column(year= i, .before = "V0") %>%
+          add_column(month= str_pad(j, width = 2, pad = "0"), 
+                     .before = "V0") %>%
+        select(year, month, type, currency, everything()) %>%
+        mutate(V0=str_extract(V0, "(.+)(?=省|市|自治区)" ),
+               V0= str_replace(V0,"壮族|回族|维吾尔", "")) %>%
+        mutate(V0= factor(V0, levels=list_province)) %>%
+        arrange(type, V0)
   
-#str(tbl_split)
+   # check actual rows and theory rows
+    rows_act <- nrow(tbl_out) 
+    
+    if (length(title_target) == 1){
+       rows_theory <- 31
+    } else if (length(title_target) == 2){
+       rows_theory <- 31*2        # two table
+    }
+    
+    
+  if (rows_theory == rows_act) {
+    print(paste0(i,"年", j, "月。恭喜！实际数据点数与理论一致！数据点数=", rows_act))
+  } else {
+    print(paste0(i,"年", j, "月。不妙！实际数据点数与理论不一致！实际数=", rows_act, ";理论数=", rows_theory))
+  }
   
+  # checking when there were inconsistent
+  ttt <- tbl_out %>%
+    group_by(type) %>%
+    summarize(n=n(), .groups="drop")
+  
+  # wait to see the result
+  Sys.sleep(1)
+  
+ if (rows_theory != rows_act) warning("请检查，数据量与预期不一致！")
+  
+  # files csv path
+  path_csv <- paste0("csv-mofcom/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+  write.csv(tbl_out, path_csv, row.names = F)
 
-
+  }
+}
 
 ```
-
 
 
 ### 2.2.1.下载并保存主站网页源代码
