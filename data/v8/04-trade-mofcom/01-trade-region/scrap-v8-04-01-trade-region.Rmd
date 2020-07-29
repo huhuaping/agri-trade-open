@@ -227,53 +227,24 @@ openxlsx::write.xlsx(tbl_urls, "tbl-urls-backup.xlsx", row.names = F)
 
 如果前述方法不能顺利执行，则可以尝试使用系统自带浏览器。（测试成功率较高）。
 
+
 ```{r}
 # 0. load R pkgs
 library("RSelenium")
 library("xml2")
 
-# you should set the table number to download all html for each url
-url_list <- tbl_urls %>%
-  filter(number == "表16")  
+tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx", sheet=1)
 
-# 1. run docker service and container
-#### you should run and start docker desktop first.
-#### then run code in 'window power shell': docker run -d -p 4445:4444 selenium/standalone-firefox
+path_pdf <- paste0("pdf/", tbl_urls$name_file)
 
-driver <- rsDriver(browser=c("firefox"))
-remDr <- driver[["client"]]
-remDr$open()
-
-# i<-  c(1)
-
-for (i in 4:nrow(url_list) ){
-  # navigate the url
-  remDr$navigate(url_list$url[i])
-  # wait seconds
-  Sys.sleep(3)
-  # confirm you got there
-   print(remDr$getTitle())
-  # check on there
-  #remDr$screenshot(display = TRUE)
-  # get the page source
-  webpage <- remDr$getPageSource()[[1]]
-  # wait seconds
-  Sys.sleep(1)
-  # read as html object
-  html_obj <- xml2::read_html(webpage)
-  # write out the html file
-  xml2::write_xml(html_obj, file=url_list$file_path[i])
+for (i in 1:nrow(tbl_urls)){
+  download.file(tbl_urls$urls[i], path_pdf[i])
   
-  print(paste0("第",i,"个页面。",url_list$file_name[i], "已经下载完成！"))
+  print(paste0("下载第", i, "个pdf文件：", tbl_urls$name_file[i] ))
+
 }
 
 
-
-#close the driver
-remDr$close()
-
-#close the server
-remDr$server$stop()
 ```
 
 
