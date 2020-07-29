@@ -223,7 +223,7 @@ openxlsx::write.xlsx(tbl_urls, "tbl-urls-backup.xlsx", row.names = F)
 
 
 
-### 下载pdf——使用系统浏览器
+### 下载全部pdf
 
 如果前述方法不能顺利执行，则可以尝试使用系统自带浏览器。（测试成功率较高）。
 
@@ -237,8 +237,8 @@ tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx", sheet=1)
 
 path_pdf <- paste0("pdf/", tbl_urls$name_file)
 
-for (i in 1:nrow(tbl_urls)){
-  download.file(tbl_urls$urls[i], path_pdf[i])
+for (i in 11:nrow(tbl_urls)){
+  download.file(tbl_urls$urls[i], path_pdf[i],mode = "wb" )
   
   print(paste0("下载第", i, "个pdf文件：", tbl_urls$name_file[i] ))
 
@@ -266,18 +266,12 @@ for (i in 1:nrow(tbl_urls)){
 
 ```{r, eval=FALSE}
 # read backup urls
-tbl_full <- read.csv("tbl-urls-backup-custom.csv") %>%
-  filter(number=="表15") %>%
-  add_column(ID=1:nrow(.), .before = "number") %>%
-  select(ID, file_name) %>%
-  rename("name_file" = "file_name")
-  
-
+tbl_full <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T) 
 
 # files html path
 ### you should change the dir according to the purpose
 ### tbl15 or tbl16
-files_dir <- here::here("data", "v8", "03-trade-custom", "04-tbl15-country-export","html-01-custom")
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "01-trade-region","pdf")
 # files_dir <- here::here("data", "v8", "03-trade-custom", "05-tbl16-country-import","html-01-custom")
 
 files_html <- list.files(str_c(files_dir,"/"))
@@ -289,23 +283,17 @@ tbl_files <- tibble(name_file=files_html,
   add_column(ID = 1:nrow(.), .before = "name_file") %>%
   mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
          month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
-  mutate(currency   = str_extract(name_file, "(.{1})(?=\\.)")) %>%
-  mutate(path_file = paste0("html-01-custom/", name_file)) 
+  mutate(path_file = paste0("pdf/", name_file)) 
 
 # check
 check_sum <- tbl_files %>%
-  group_by(year, month) %>%
+  group_by(year) %>%
   summarize(n=n(), .groups="drop")
 
 # check file size not normal
 check_size <- tbl_files %>%
   select(name_file, size) %>%
   filter(size < 200) 
-
-check_error <- check_size %>%
-  left_join(., tbl_full, by="name_file")
-
-list_download <- check_error$ID
 
 
 ```
@@ -416,65 +404,224 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 
 ### pdf抓取为csv
 
+#### 异常提示
+
+2002/01-2003/02：一张表跨两页。只有出口。
+-   2002/01和2002/02，没有上年同期金额。
+
+
+
+
+- 多出一套数据。2002-11 多出一套数据（11个html）
+
+- 找不到识别符。“单位”识别符缺失。2011-02-c12-t09.html。处理办法：
+```
+case for no identifier  2011-02-c12-t09.html
+if (length(row_cur)==0) {
+  unit_cur <- "千美元"
+  print(paste0("注意！没有找到“单位”标识。手动设置为：", unit_cur))
+  }
+```
+
+- 多出重复页面，但是数据不一样。2016-08-c88-t16.html。**处理办法**：直接拿出来，不放进文件夹。
+
+- 单位、国家和月份都在一行。 需要设置special：`2011-05`；`2014-12`。
+
+- 词语错误。"类聿"应该调整为“类章”。重新导出csv：2014-02-c73-t18.html。
+
+
+#### 抓取代码
+
 ```{r}
 # install.packages("pdftools")
 library("pdftools")
 
-# read pdf as text
-pth<- "2008-01.pdf" 
-txt <- pdf_text(pth)
+# read backup urls
+tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T) 
+
+# files pdf path
+### you should change the dir according to the purpose
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "01-trade-region","pdf")
+
+
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# table the files
+tbl_files <- tibble(name_file=files_html,
+                    size = round(file.size(page_url)/1024,0)) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(month_num= as.numeric(month)) %>%
+  mutate(path_file = paste0("pdf/", name_file)) 
 
 
 # set pars for seek whitespace style
-n_start <- c(61,51,41,1) # not zero
-n_end <-  c(70,60,50,40)
+n_start <- c(61,51,26,1) # not zero
+n_end <-  c(70,60,50,25)
 n_style <- paste0("(#){", n_start, ",", n_end, "}")
 n_rep <-  c("&&&&","&&&", "&&", "&" )
 
 
 
+i <- 2002
+j <- 2
+k <- 1
 
-# extract the text page of pdf
-txt_page<- txt[27]
+for (i in 2002:2002) {
+  # filter year and month
+  tbl_ym <- tbl_files %>%
+    filter(year==i)
 
-# detect info section
-detect_title <- str_extract(txt_page, "(表\\d{1,2}：.+情况)")
-detect_unit <- str_extract(txt_page, "(金额单位：.{3})")
-type <- str_extract(detect_title, ".{2}(?=情况)")
-currency <- str_extract(detect_unit, "(?<=单位：)(.+)")
+  i_len <- nrow(tbl_ym)
+  
+  for (j in c(1:12)) {
+    # read pdf as text
+    pth<- tbl_ym$path_file[j]
+    txt <- suppressWarnings(suppressMessages(pdf_text(pth)))
+    
+    # target table export and table import
+    #index_target <- which(str_detect(txt, "表12|表13"))
+    title_target <- which(str_detect(txt, "表.+分地区"))
+    txt_page <- txt[title_target]
+    detect_title <- str_extract(txt_page, "(表.+分地区.{2}情况)")
+    type <- str_extract(detect_title, ".{2}(?=情况)")
+    
+    # check if one table in two page  
+    page_target_begin <- which(str_detect(txt, "北京"))
+    page_target_end <- which(str_detect(txt, "新疆"))
+    if (length(page_target_begin) == 1){
+      print("只有一张贸易表（出口）")
+    } else if (length(page_target_begin) == 2) {
+      print("有两张贸易表（进/出口）")
+      } else {
+      stop("没有识别到贸易表，请核对！")
+    }
+    
+    index_target <- page_target_begin
+    if (!(length(index_target)  %in% c(1,2)) ) stop("目标pdf表格数不符，请核对！")
+    
+    tbl_out <- NULL
+    
+    # loop table 12 and table 13
+    for (k in 1:length(index_target)){
+      # locate the target page
+      txt_page <- txt[index_target[k]]
+      
+      # detect info section
+      
+      detect_unit <- str_extract(txt_page, "(单位.+)")
+      currency <- str_extract(detect_unit, "(?<=单位：|单位)(.+)") %>%
+        str_trim(side = "both")
+      
+      # obtain data section
+      
+      province_spec <- "alpha"
+      
+      if (province_spec == "alpha"){
+        # rm all string before 安徽
+        txt_range <- gsub( "((.|\\n)*)(?=安徽)","",txt_page, perl = T) 
+        # rm all string after the last %: year 2002
+        txt_range <- gsub( "[^%]+$((.|\\n)*)","",txt_tbl, perl = T)    
+      } else if(province_spec == "yearbook"){
+        txt_range <- gsub( "((.|\\n)*)(?=北京)","",txt_page, perl = T)
+      }
+      
+      txt_tbl <- txt_range %>%
+        str_split(., "\r\n") %>%
+        .[[1]] %>%
+        as_tibble()%>%
+        mutate(value=gsub(" ", "#", value))%>%
+        mutate(value=gsub(",", "", value)) %>%
+        mutate(value=gsub("%", "", value))
+      
+      # detect the start and end row
+      if (province_spec == "alpha"){
+        head_tail <- which(str_detect(txt_tbl$value,"安徽|浙江"))
+      } else if(province_spec == "yearbook") {
+        head_tail <- which(str_detect(txt_tbl$value,"北京|新疆"))
+      }
+      range <- head_tail[1]:head_tail[2]
+      
+      # get the raw table
+      tbl_raw <- txt_tbl %>%
+        # delete rows unnecessary
+        .[range,] 
+      
+      # check styles
+      check <- check_tbl(tbl= tbl_raw)
+      
+      # create names
+      n_cols <- max(check$len)
+      if ((i %in%c(2002)) ){
+        names_eng <- c("V0", paste0("V",c(1,3) ))
+      } else {
+         names_eng <- c("V0", paste0("V",1:n_cols ))
+      }
+     
+      
+      # obtain the split table
+      tbl_split <- get_split(tbl_check = check) %>%
+        select(all_of(names_eng))
+      
+      # add columns
+      tbl_add <- tbl_split  %>%
+        add_column(year= i, .before = "V0") %>%
+        add_column(month= str_pad(j, width = 2, pad = "0"), .before = "V0")%>%
+        add_column(type=type, .before = "V0") %>%
+        add_column(currency=currency, .before = "V0") %>%
+        filter(V0!="其他")  # special case for 2002
+      
+       # check actual rows and theory rows
+      rows_act <- nrow(tbl_add) 
+      
+      # print message
+      print(paste0(i,"年", j, "月。pdf第",k , "页：",
+            tbl_ym$name_file[j],"。此页面实际数行=", rows_act))
+      
+      # combine two table
+      tbl_out <- bind_rows(tbl_out, tbl_add)
+      
+    }
+  
+   # check actual rows and theory rows
+    rows_act <- nrow(tbl_out) 
+    
+    if (length(page_target_begin) == 1){
+       rows_theory <- 31
+    } else if (length(page_target_begin) == 2){
+       rows_theory <- 31*2        # two table
+    }
+ 
+  
+  if (rows_theory == rows_act) {
+    print(paste0(i,"年", j, "月。恭喜！实际数据点数与理论一致！数据点数=", rows_act))
+  } else {
+    print(paste0(i,"年", j, "月。不妙！实际数据点数与理论不一致！实际数=", rows_act, ";理论数=", rows_theory))
+  }
+  
+  # checking when there were inconsistent
+  ttt <- tbl_out %>%
+    group_by(type) %>%
+    summarize(n=n(), .groups="drop")
+  
+  # wait to see the result
+  Sys.sleep(1)
+  
+ if (rows_theory != rows_act) stop("请检查，数据量与预期不一致！")
+  
+  # files csv path
+  path_csv <- paste0("csv-mofcom/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+  write.csv(tbl_out, path_csv, row.names = F)
 
-# obtain data section
-txt_tbl <- gsub( "((.|\\n)*)(?=北京)","",txt_page, perl = T) %>%
-  str_split(., "\r\n") %>%
-  .[[1]] %>%
-  as_tibble()%>%
-  mutate(value=gsub(" ", "#", value))%>%
-  mutate(value=gsub(",", "", value))
+  }
+}
 
-# detect the start and end row
-row_first <-  which(str_detect(txt_tbl$value,"北京"))
-row_last <-  which(str_detect(txt_tbl$value,"新疆"))
-range <- row_first:row_last
 
-# get the raw table
-tbl_raw <- txt_tbl %>%
-  # delete rows unnecessary
-  .[range,] 
 
-# check styles
-check <- check_tbl(tbl= tbl_raw)
 
-# create names
-n_cols <- unique(check$len) 
-names_eng <- c("V0", paste0("V",1:n_cols ))
 
-# obtain the split table
-tbl_split <- get_split(tbl_check = check) %>%
-  select(all_of(names_eng))
-
-# add columns
-tbl_add <- tbl_split %>%
-  add_column(trade=type, .before = "V0")
 
   
 #str(tbl_split)
