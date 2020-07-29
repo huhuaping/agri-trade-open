@@ -40,10 +40,15 @@ require("tidyselect")
 
 \newpage
 
-# 1.数据信息概要
+# 1.研究目标
 
+目标是把中国海关发布的两张表数据（表15和表16）——部分国家(地区)出口/进口商品类章金额表（人民币值）——所有数据整理出来。初步分析，我国主要农产品进/出口国家和地区的趋势和关系。
 
-## 1.1资料来源1：商务部网站
+这个目标比较明确和具体，数据是可获得的。数据集最终为中国跟各个国家在主要农产品上的月度（20余年x12月/年=`r 20*12+5`）进出口贸易额。
+
+# 2.数据集
+
+## 2.1资料来源1：商务部网站
 
 中国商务部-[农产品贸易专题网站](http://wms.mofcom.gov.cn/article/ztxx/ncpmy/)
 
@@ -65,7 +70,7 @@ require("tidyselect")
 - 文件格式：pdf-制式表格
 
 
-## 1.2资料来源2：搜数网-中国农业统计年鉴
+## 2.2资料来源2：搜数网-中国农业统计年鉴
 
 
 搜数网[人大权限](https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136)
@@ -85,29 +90,12 @@ require("tidyselect")
 
 
 
-## 1.2指标和变量
 
 
-农产品类章进/出口量值：
-
-- 指标（数据列）：数量/金额【按人民币】
-
-- 样本单位（数据行）：商品类章
-
-- 数据频率：月度
+# 3.数据抓取流程
 
 
-## 1.3原始数据形态
-
-- 中国海关总署：html表格，在线网址
-
-- 搜数网：下载的html静态页面
-
-
-# 2.数据整理过程
-
-
-## 2.1数据抓取策略
+## 3.1数据抓取策略
 
 同时对两个数据源进行互补式抓取：
 
@@ -124,26 +112,407 @@ a. 理想方法：通过Rselenium+docker的办法自动化抓取到所需表格�
 b. 手工办法：进入海关网站，手动下载每个月份页面的实际静态网页到本地。工作量初步估计：进出口量值的页面数=7年x12月x2类=`r 7*12*2`
 
 
-## 2.2抓取环节1：中国海关总署统计月报
+## 3.2抓取环节1：下载静态pdf
 
 基本过程：
 
-a. 以源文件方式保存[主站](http://www.customs.gov.cn/customs/302249/302274/302277/index.html)。
+a. 中国农产品进出口月度统计报告。进入[主站](http://wms.mofcom.gov.cn/article/ztxx/ncpmy/ncpydtj/200603/20060301783733.shtml)。
 
-b. 第一步是需要获得指定“主题”（例如“进口主要商品量值表”）下所有月份的实际网址url。具体细节见后面的`R`代码（见节\@ref(auto-url)）。
+b. 第一步是需要获得指定“主题”（例如“中国农产品进出口月度统计报告”）下所有月份的实际网址url。具体细节见后面的`R`代码（见节\@ref(auto-url)）。
 
 c. 根据获取的实际url，下载全部静态表格网页到本地，并批量命名。
 
-d. 通过下载所有月份的静态网页html（含有数据表），然后再进行数据整合。
+d. 通过下载所有月份的静态网页pdf（含有数据表），然后再进行数据整合。
 
 
-主要关注如下几类网页表：
+主要关注如下pdf页面表格：
 
-- 表4：**“进出口商品类章总值表”**
+- 表12：2008年1月分地区出口情况
 
-- 表13/14：**“出口/进口主要商品量值表”**。主要商品较具体，重点关注：肉及杂碎（其子类中的牛肉、猪肉、羊肉）、谷物及谷物粉（其子类中的稻谷和大米、玉米、豆类）等。
+- 表13：2008年1月分地区进口情况
 
-- 表15/16：**“对部分国家（地区）出口/进口商品类章金额表”**。按类章、并区分与部分国家的进出口贸易关系。
+### 获得网站所有pdf的urls
+
+**操作提示**：
+
+- 2018年直接是.rar压缩包下载，全年月份pdf都有。
+
+
+```{r}
+# 0. load R pkgs
+
+require("rvest")
+require("xml2")
+require("httr")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+# navigate the home page
+url_report <-"http://wms.mofcom.gov.cn/article/ztxx/ncpmy/ncpydtj/200603/20060301783733.shtml"
+doc <-  read_html(url_report, encoding = "utf-8")
+
+# obtain past year home page: 2002-2019
+css_past <- "#zoom> p > a, #zoom> p > span> a, #zoom> p > span> span>a"
+### year title
+title_past <- doc %>%
+  html_nodes(css = css_past) %>%
+  html_text()
+### year urls
+url_latest <- doc %>%
+  html_nodes(css = css_past) %>%
+  html_attr("href")
+### table
+nav_urls <- tibble(year=title_past, urls=url_latest) %>%
+  filter(year!="2018年")    # filter year 2018 is rar zip file
+
+# get pdfs' urls: the latest years  2020
+css_pdf <- "#zoom > table > tbody > tr > td > p > a"
+
+title_latest <- doc %>%
+  html_nodes(css = css_pdf) %>%
+  html_text()
+
+url_latest <- doc %>%
+  html_nodes(css = css_pdf) %>%
+  html_attr("href")
+
+tbl_out <- tibble(title=title_latest, urls=url_latest)
+
+# get pdfs' urls: the past years 2002-2019 (not 2018)
+n_year <- nrow(nav_urls)
+i <- 2
+
+# loop for all years homepage
+### special css case in 2017 and 
+css_pdf <- "#zoom > table > tbody > tr > td > p > a, #zoom > table > tbody > tr > td > p > span >a, #zoom > table > tbody > tr > td > a"
+for (i in 1:n_year){
+  # the home page
+  doc_pdf <- read_html(nav_urls$urls[i])
+  
+  title_pdf <- doc_pdf %>%
+    html_nodes(css = css_pdf) %>%
+    html_text()
+  
+  url_pdf <- doc_pdf %>%
+    html_nodes(css = css_pdf) %>%
+    html_attr("href")
+  
+  tbl_pdf <- tibble(title=title_pdf, urls=url_pdf) %>%
+    filter(title!="")   # special 2002-2004
+  tbl_out <- bind_rows(tbl_out, tbl_pdf)
+}
+
+
+tbl_urls <- tbl_out %>%
+  mutate(year= as.numeric(str_extract(title, "(\\d{4})(?=年)")),
+         month_raw= str_extract(title, "(?<=年)(.+)(?=月)")) %>%
+  mutate(month = as.numeric(month_raw),
+         month = str_pad(month, width = 2, side="left", pad="0")) %>%
+   # file names
+  mutate(name_file = paste0(year, "-",month, ".pdf")) %>%
+  add_column(ID=1:nrow(.), .before = "title") 
+  
+
+
+### backup for check
+openxlsx::write.xlsx(tbl_urls, "tbl-urls-backup.xlsx", row.names = F)
+
+```
+
+
+
+
+### 下载pdf——使用系统浏览器
+
+如果前述方法不能顺利执行，则可以尝试使用系统自带浏览器。（测试成功率较高）。
+
+```{r}
+# 0. load R pkgs
+library("RSelenium")
+library("xml2")
+
+# you should set the table number to download all html for each url
+url_list <- tbl_urls %>%
+  filter(number == "表16")  
+
+# 1. run docker service and container
+#### you should run and start docker desktop first.
+#### then run code in 'window power shell': docker run -d -p 4445:4444 selenium/standalone-firefox
+
+driver <- rsDriver(browser=c("firefox"))
+remDr <- driver[["client"]]
+remDr$open()
+
+# i<-  c(1)
+
+for (i in 4:nrow(url_list) ){
+  # navigate the url
+  remDr$navigate(url_list$url[i])
+  # wait seconds
+  Sys.sleep(3)
+  # confirm you got there
+   print(remDr$getTitle())
+  # check on there
+  #remDr$screenshot(display = TRUE)
+  # get the page source
+  webpage <- remDr$getPageSource()[[1]]
+  # wait seconds
+  Sys.sleep(1)
+  # read as html object
+  html_obj <- xml2::read_html(webpage)
+  # write out the html file
+  xml2::write_xml(html_obj, file=url_list$file_path[i])
+  
+  print(paste0("第",i,"个页面。",url_list$file_name[i], "已经下载完成！"))
+}
+
+
+
+#close the driver
+remDr$close()
+
+#close the server
+remDr$server$stop()
+```
+
+
+
+### 核对最终下载页面数
+
+（可能会少于后者）与实际下载页面数是否一致
+
+因为原始`tbl_com`里可能存在标题重复或错误，从而导致最终下载页面数会少于实际下载页面数。
+
+处理办法如下：
+- 列表最终下载页面，`tbl_files`。
+- 列表实际下载页面，`tbl_urls`。
+- 查看二者行数是否一致（前者少于后者9个）
+- 检查实际下载页面，`tbl_urls`的列`name_file`是否存在重复，以及哪些行重复
+- 追踪到tbl_com.csv，定位到这些行，并查明原因。一类原因是title错误，确认后直接在csv里修改好；二类原因是确实重复了，那可以直接忽略（因为下载后会自动覆盖这些重复urls）
+
+下面是检查代码：
+
+```{r, eval=FALSE}
+# read backup urls
+tbl_full <- read.csv("tbl-urls-backup-custom.csv") %>%
+  filter(number=="表15") %>%
+  add_column(ID=1:nrow(.), .before = "number") %>%
+  select(ID, file_name) %>%
+  rename("name_file" = "file_name")
+  
+
+
+# files html path
+### you should change the dir according to the purpose
+### tbl15 or tbl16
+files_dir <- here::here("data", "v8", "03-trade-custom", "04-tbl15-country-export","html-01-custom")
+# files_dir <- here::here("data", "v8", "03-trade-custom", "05-tbl16-country-import","html-01-custom")
+
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# table the files
+tbl_files <- tibble(name_file=files_html,
+                    size = round(file.size(page_url)/1024,0)) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(currency   = str_extract(name_file, "(.{1})(?=\\.)")) %>%
+  mutate(path_file = paste0("html-01-custom/", name_file)) 
+
+# check
+check_sum <- tbl_files %>%
+  group_by(year, month) %>%
+  summarize(n=n(), .groups="drop")
+
+# check file size not normal
+check_size <- tbl_files %>%
+  select(name_file, size) %>%
+  filter(size < 200) 
+
+check_error <- check_size %>%
+  left_join(., tbl_full, by="name_file")
+
+list_download <- check_error$ID
+
+
+```
+
+
+以下是**缺失性**核查的结果：
+
+- **表15**：对部分国家(地区)出口商品类章金额表：
+    - 2014-04 到2015-01，都是图片格式，无法识别。
+    - 2017-08。图片格式，无法识别。
+
+
+- **表16**：自部分国家(地区)进口商品类章金额表：
+    - 2016-12，缺失网页表格；但是可以下载到excel表格。 后面需要单独处理。保存在`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-D.xls`和`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-R.xls`
+
+
+## 3.3导出pdf为对应的csv文件
+
+### 前期测试
+
+```{r}
+#install.packages("tabulizer")
+library("tabulizer")
+
+f <- system.file("2008-01.pdf", package = "tabulizer")
+tab <- extract_tables(f, pages = 27)
+
+extract_areas(file = pth, pages = 27, output = "data.frame")
+
+agri_report <- extract_tables(file = "2008-01.pdf", pages = 27,
+                              #area = list(c(6,2,25,19)),
+                              guess = F,
+                              encoding = "gb18030", 
+                              method = "decide", output = "data.frame") %>%
+  as_tibble()
+
+Encoding("鍖椾含")
+
+iconv("鍖椾含", from="utf-8", to="unicode")
+
+guess_encoding(agri_report)
+```
+
+
+### 函数0：基础函数
+
+```{r}
+# function for count white spaces
+countWhiteSpaces <- function(x) attr(gregexpr("(?<=[^#])[#]+(?=[^#])", x, perl = TRUE)[[1]], "match.length")
+
+# function for seek the whitespace style
+###install.packages("mgsub")
+###library("mgsub")
+str_seek <- function(strs, style=n_style,rep=n_rep){
+  out <- mgsub::mgsub(strs, pattern = style, replacement =rep,perl = F)
+  return(out)
+}
+
+
+# function for calculate vector modes
+getModes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  ux[tab == max(tab)]
+}
+```
+
+### 函数3：核验原始表格
+
+```{r}
+#dt <- rawpage
+# check styles
+check_tbl <- function(tbl){
+  tbl_dt <- tbl %>%
+  mutate(n=map(.x = value, .f = countWhiteSpaces)) %>%
+  mutate(len = lengths(n), 
+         min=map(.x=n, .f=min), 
+         max=map(.x=n, .f=max), 
+         mode=map(.x = n, .f = getModes))
+  return(tbl_dt)
+}
+
+#check <- tbl_check(rawpage)
+
+```
+
+
+### 函数4：得到清洗后的表
+
+```{r}
+#tbl_check <- check
+# obtain the table output
+get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
+  len_max <- tbl_check %>% .$len %>% unlist() %>% max()
+  tbl_seek <- tbl_check %>%
+    mutate(str= if_else(
+      len==len_max,gsub("(#){1,50}", "&", value, perl = F), # for full len
+      mgsub::mgsub(value, pattern = style, 
+                   replacement =rep, perl = F) # for other
+      ) ) %>%
+    select(str) %>%
+    #mutate(str= str_replace(str, "-", "NA")) %>%
+    separate(str,into = vars_eng, sep = "&")  %>%
+    mutate_at(all_of(vars_eng[-1]), .funs = as.numeric, digits=2)
+}
+
+```
+
+### pdf抓取为csv
+
+```{r}
+# install.packages("pdftools")
+library("pdftools")
+
+# read pdf as text
+pth<- "2008-01.pdf" 
+txt <- pdf_text(pth)
+
+
+# set pars for seek whitespace style
+n_start <- c(61,51,41,1) # not zero
+n_end <-  c(70,60,50,40)
+n_style <- paste0("(#){", n_start, ",", n_end, "}")
+n_rep <-  c("&&&&","&&&", "&&", "&" )
+
+
+
+
+# extract the text page of pdf
+txt_page<- txt[27]
+
+# detect info section
+detect_title <- str_extract(txt_page, "(表\\d{1,2}：.+情况)")
+detect_unit <- str_extract(txt_page, "(金额单位：.{3})")
+type <- str_extract(detect_title, ".{2}(?=情况)")
+currency <- str_extract(detect_unit, "(?<=单位：)(.+)")
+
+# obtain data section
+txt_tbl <- gsub( "((.|\\n)*)(?=北京)","",txt_page, perl = T) %>%
+  str_split(., "\r\n") %>%
+  .[[1]] %>%
+  as_tibble()%>%
+  mutate(value=gsub(" ", "#", value))%>%
+  mutate(value=gsub(",", "", value))
+
+# detect the start and end row
+row_first <-  which(str_detect(txt_tbl$value,"北京"))
+row_last <-  which(str_detect(txt_tbl$value,"新疆"))
+range <- row_first:row_last
+
+# get the raw table
+tbl_raw <- txt_tbl %>%
+  # delete rows unnecessary
+  .[range,] 
+
+# check styles
+check <- check_tbl(tbl= tbl_raw)
+
+# create names
+n_cols <- unique(check$len) 
+names_eng <- c("V0", paste0("V",1:n_cols ))
+
+# obtain the split table
+tbl_split <- get_split(tbl_check = check) %>%
+  select(all_of(names_eng))
+
+# add columns
+tbl_add <- tbl_split %>%
+  add_column(trade=type, .before = "V0")
+
+  
+#str(tbl_split)
+  
+
+
+
+```
+
 
 
 ### 2.2.1.下载并保存主站网页源代码
