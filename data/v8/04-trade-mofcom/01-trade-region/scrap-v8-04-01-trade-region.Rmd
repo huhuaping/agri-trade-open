@@ -409,25 +409,14 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 2002/01-2003/02：一张表跨两页。只有出口。
 -   2002/01和2002/02，没有上年同期金额。
 
+2003-03~2004-12：省份异常，安徽开头，重庆结尾。
 
+2005-01~2005-12：省份异常，上海开头，黑龙江结尾。
 
+2006-01：省份排序异常。上海开头，黑龙江结尾。
 
-- 多出一套数据。2002-11 多出一套数据（11个html）
+2016-09: 进出口表被整合在一块，没法识别。
 
-- 找不到识别符。“单位”识别符缺失。2011-02-c12-t09.html。处理办法：
-```
-case for no identifier  2011-02-c12-t09.html
-if (length(row_cur)==0) {
-  unit_cur <- "千美元"
-  print(paste0("注意！没有找到“单位”标识。手动设置为：", unit_cur))
-  }
-```
-
-- 多出重复页面，但是数据不一样。2016-08-c88-t16.html。**处理办法**：直接拿出来，不放进文件夹。
-
-- 单位、国家和月份都在一行。 需要设置special：`2011-05`；`2014-12`。
-
-- 词语错误。"类聿"应该调整为“类章”。重新导出csv：2014-02-c73-t18.html。
 
 
 #### 抓取代码
@@ -465,11 +454,11 @@ n_rep <-  c("&&&&","&&&", "&&", "&" )
 
 
 
-i <- 2002
-j <- 2
+i <- 2009
+j <- 1
 k <- 1
 
-for (i in 2002:2002) {
+for (i in 2005:2004) {
   # filter year and month
   tbl_ym <- tbl_files %>%
     filter(year==i)
@@ -513,11 +502,12 @@ for (i in 2002:2002) {
       
       detect_unit <- str_extract(txt_page, "(单位.+)")
       currency <- str_extract(detect_unit, "(?<=单位：|单位)(.+)") %>%
-        str_trim(side = "both")
+        str_trim(side = "both") %>%
+        str_replace("：", "")
       
       # obtain data section
       
-      province_spec <- "alpha"
+      province_spec <- "yearbook"
       
       if (province_spec == "alpha"){
         # rm all string before 安徽
@@ -569,7 +559,7 @@ for (i in 2002:2002) {
       tbl_add <- tbl_split  %>%
         add_column(year= i, .before = "V0") %>%
         add_column(month= str_pad(j, width = 2, pad = "0"), .before = "V0")%>%
-        add_column(type=type, .before = "V0") %>%
+        add_column(type=type[k], .before = "V0") %>%
         add_column(currency=currency, .before = "V0") %>%
         filter(V0!="其他")  # special case for 2002
       
