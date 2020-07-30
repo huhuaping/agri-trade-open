@@ -640,47 +640,8 @@ for (i in 1:length(csv_files)) {
 
 # checking when there were inconsistent
 ttt <- tbl_out %>%
-  group_by(currency) %>%
-  summarize(n=n(), .groups="drop")
-
-tbl_bad <- tbl_out %>%
-  filter(country=="中国")
-
-# replace the country name 
-tbl_tidy <- tbl_out %>%
-  # tidy the country name
-  mutate(country = str_replace(country, ("(?!芬兰)(芬)|(分兰)"), "芬兰")) %>%
-  mutate(country = str_replace(country, ("阿克廷"), "阿根廷")) %>%
-  mutate(country = str_replace(country, ("奧地利"), "奥地利")) %>%
-  mutate(country = str_replace(country, ("力口拿大"), "加拿大")) %>%
-  mutate(country = str_replace(country, ("马来两亚"), "马来西亚")) %>%
-  mutate(country = str_replace(country, ("欧洲眹盟"), "欧洲联盟")) %>%
-  mutate(country = str_replace(country, ("新加皮"), "新加坡")) %>%
-  mutate(country = str_replace(country, ("(?!意大利)意大"), "意大利")) %>%
-  mutate(country = str_replace(country, ("(台湾省)"), "中国台湾")) %>%
-  mutate(country = str_replace(country, ("^(?!中国)(台湾)"), "中国台湾")) %>%
-  mutate(country = str_replace(country, ("^(?!中国)(澳门)"), "中国澳门")) %>%
-  mutate(country = str_replace(country, ("^(?!中国)(香港)"), "中国香港")) %>%
-  ### country from tbl 16  
-  mutate(country = str_replace(country, ("何兰"), "荷兰")) %>%
-  mutate(country = str_replace(country, ("俄罗期联邦"), "俄罗斯联邦")) %>%
-  mutate(country = str_replace(country, ("(?!俄罗斯联邦)俄罗斯"), "俄罗斯联邦")) %>%
-  mutate(country = str_replace(country, ("缅面|緬甸"), "缅甸")) %>%
-  
-  # tidy the cat
-  mutate(cat = str_replace(cat,"(第)(\\d{1}类)", "\\10\\2")) %>%
-  # tidy the currency
-  mutate(currency = str_replace(currency, ("(兀)|(元#)"), "元")) %>%
-  mutate(currency = str_replace(currency, ("(万元)"), "万")) %>%
-  mutate(currency = str_replace(currency, ("(?!千美元)(千美)"), "千美元")) %>%
-  # add source
-  add_column(source="sooshu")
-
-
-### check the unique country
-# unique(tbl_tidy$currency)
-
-
+  group_by(V0) %>%
+  summarize(n=n())
 
 ```
 
@@ -689,6 +650,6 @@ tbl_tidy <- tbl_out %>%
 ## 3.5写出有效数据
 
 ```{r}
-path_out <- str_c("source02-sooshu-tbl16-country-import-", Sys.Date(),".csv")
-write.csv(tbl_tidy, path_out, row.names = F)
+path_out <- str_c("tbl-mofcom-agri-trade-region-", Sys.Date(),".csv")
+write.csv(tbl_out, path_out, row.names = F)
 ```
