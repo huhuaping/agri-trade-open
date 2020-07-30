@@ -631,7 +631,7 @@ for (i in 1:length(csv_files)) {
   tbl_value <- tbl_tidy %>%
     mutate(V1=ifelse(currency=="美元", V1/10000, V1),
            V2=ifelse(currency=="美元", V2/10000, V2)) %>%
-    mutate(currency=str_replace(currency, "(?!万美元)美元", "万美元"))
+    mutate(currency=ifelse(currency=="美元", "万美元", currency))
   
   # row bind 
   tbl_out <- bind_rows(tbl_out, tbl_value)
@@ -641,7 +641,7 @@ for (i in 1:length(csv_files)) {
 # checking when there were inconsistent
 ttt <- tbl_out %>%
   group_by(currency) %>%
-  summarize(n=n())
+  summarize(n=n(), .groups="drop")
 
 tbl_bad <- tbl_out %>%
   filter(country=="中国")
