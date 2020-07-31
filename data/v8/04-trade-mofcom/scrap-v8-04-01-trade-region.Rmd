@@ -42,7 +42,13 @@ require("tidyselect")
 
 # 1.研究目标
 
-目标是把中国商务部发布的《中国农产品进出口月度统计报告》中的——(31个省区)分地区进/出口情况——所有数据整理出来。初步分析，我国各省区农产品进/出口的趋势和关系。
+目标是把中国商务部发布的《中国农产品进出口月度统计报告》中的所有相关数据整理出来。
+
+- 农产品(31个省区)分地区进/出口情况
+
+- 重点农产品进/出口产品重点市场（前三市场国家地区）。
+
+初步分析，我国各省区农产品进/出口的趋势和关系。
 
 
 
@@ -59,12 +65,13 @@ require("tidyselect")
 - 数据频率：月度
 - 文件格式：pdf-制式表格
 
-**《重要农产品出口月度报告》**:
+**《重要农产品出口月度报告》**: 只有出口，没有进口。
 
 - 文件标题：
     - ["中国农产品出口月度统计报告-大米"](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269241.html)
     - ["中国农产品出口月度统计报告-小麦"](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269081.html)
     - [中国农产品出口月度统计报告-玉米](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269063.html)
+
 - 可下载年限范围：2006/12-2020/03
 - 数据频率：月度
 - 文件格式：pdf-制式表格
@@ -269,7 +276,7 @@ tbl_full <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T)
 # files html path
 ### you should change the dir according to the purpose
 ### tbl15 or tbl16
-files_dir <- here::here("data", "v8", "04-trade-mofcom", "01-trade-region","pdf")
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "pdf")
 # files_dir <- here::here("data", "v8", "03-trade-custom", "05-tbl16-country-import","html-01-custom")
 
 files_html <- list.files(str_c(files_dir,"/"))
@@ -309,32 +316,6 @@ check_size <- tbl_files %>%
 
 
 ## 3.3导出pdf为对应的csv文件
-
-### 前期测试
-
-```{r}
-#install.packages("tabulizer")
-library("tabulizer")
-
-f <- system.file("2008-01.pdf", package = "tabulizer")
-tab <- extract_tables(f, pages = 27)
-
-extract_areas(file = pth, pages = 27, output = "data.frame")
-
-agri_report <- extract_tables(file = "2008-01.pdf", pages = 27,
-                              #area = list(c(6,2,25,19)),
-                              guess = F,
-                              encoding = "gb18030", 
-                              method = "decide", output = "data.frame") %>%
-  as_tibble()
-
-Encoding("鍖椾含")
-
-iconv("鍖椾含", from="utf-8", to="unicode")
-
-guess_encoding(agri_report)
-```
-
 
 ### 函数0：基础函数
 
@@ -428,7 +409,7 @@ tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T)
 
 # files pdf path
 ### you should change the dir according to the purpose
-files_dir <- here::here("data", "v8", "04-trade-mofcom", "01-trade-region","pdf")
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "pdf")
 
 
 files_html <- list.files(str_c(files_dir,"/"))
@@ -572,7 +553,7 @@ for (i in 2020:2020) {
  if (rows_theory != rows_act) warning("请检查，数据量与预期不一致！")
   
   # files csv path
-  path_csv <- paste0("csv-mofcom/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+  path_csv <- paste0("csv-01-region/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
   write.csv(tbl_out, path_csv, row.names = F)
 
   }
@@ -599,7 +580,7 @@ cat_list <- paste0(str_pad(c(1:4,7:8,10:11,15,31,51:52), width = 2, pad = "0"),
                    "章")
 
 # files path
-csv_dir <- here::here("data", "v8", "04-trade-mofcom","01-trade-region", "csv-mofcom")
+csv_dir <- here::here("data", "v8", "04-trade-mofcom", "csv-01-region")
 csv_files <- list.files(str_c(csv_dir,"/"))
 csv_url <- str_c(csv_dir, csv_files, sep = "/")
 
