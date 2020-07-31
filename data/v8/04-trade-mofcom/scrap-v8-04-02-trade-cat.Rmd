@@ -237,14 +237,14 @@ j <- 6
 k <- 1
 
 # loop years
-for (i in 2007:2019) {
+for (i in 2020:2020) {
   # filter year and month
   tbl_ym <- tbl_files %>%
     filter(year==i)
 
   i_len <- nrow(tbl_ym)
   # loop months
-  for (j in c(1:12)) {
+  for (j in c(1:3)) {
     # read pdf as text
     pth<- tbl_ym$path_file[j]
     txt <- suppressWarnings(suppressMessages(pdf_text(pth)))
