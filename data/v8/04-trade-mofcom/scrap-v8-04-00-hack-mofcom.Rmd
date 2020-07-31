@@ -1,0 +1,330 @@
+---
+title: "中国商务部农产品贸易专题网站抓取"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    reference_docx: report-reference.docx
+  word_document:
+    toc: no
+    toc_depth: '4'
+  bookdown::html_document2:
+    number_sections: yes
+    toc: no
+    fig_caption: yes
+    toc_float: yes
+always_allow_html: yes
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+
+```
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+\newpage
+
+# 1.研究目标
+
+目标是把中国商务部发布的《中国农产品进出口月度统计报告》中的所有相关数据整理出来。
+
+- 农产品(31个省区)分地区进/出口情况
+
+- 重点农产品进/出口产品重点市场（前三市场国家地区）。
+
+初步分析，我国各省区农产品进/出口的趋势和关系。
+
+
+
+# 2.数据集
+
+## 2.1资料来源1：商务部网站
+
+中国商务部-[农产品贸易专题网站](http://wms.mofcom.gov.cn/article/ztxx/ncpmy/)
+
+**《中国农产品进出口月度统计报告》**:
+
+- 文件标题："中国农产品进出口月度统计报告2020年1月"
+- 可下载年限范围：2002/01-2020/02
+- 数据频率：月度
+- 文件格式：pdf-制式表格
+
+**《重要农产品出口月度报告》**: 只有出口，没有进口。
+
+- 文件标题：
+    - ["中国农产品出口月度统计报告-大米"](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269241.html)
+    - ["中国农产品出口月度统计报告-小麦"](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269081.html)
+    - [中国农产品出口月度统计报告-玉米](http://wms.mofcom.gov.cn/aarticle/Nocategory/200609/20060903269063.html)
+
+- 可下载年限范围：2006/12-2020/03
+- 数据频率：月度
+- 文件格式：pdf-制式表格
+
+
+## 2.2资料来源2：搜数网-中国农业统计年鉴
+
+
+搜数网[人大权限](https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136)
+
+
+- 搜数标题："中国2003年各地区主要农产品出口贸易情况统计"、"中国2003年各地区主要农产品进口贸易情况统计"
+- 可下载年限范围：2003-2013
+- 数据来源：中国农业年鉴
+- 数据频率：年度
+- 文件格式：html-形式表格
+
+- 搜数标题："中国2012年各地区农产品进出口总值统计"
+- 数据来源：中国农业年鉴
+- 可下载年限范围：2002-2012
+- 数据频率：年度
+- 文件格式：html-形式表格
+
+
+
+# 3.数据抓取流程
+
+
+## 3.1数据抓取策略
+
+同时对两个数据源进行互补式抓取：
+
+- 2014/6-2020/5：抓取中国海关总署，在线网址形式的html表格数据
+
+- 2000/1-2014/5：抓取搜数网，下载好的html静态页面数据
+
+对于中国海关总署网站数据，有两个抓取办法：
+
+>
+a. 理想方法：通过Rselenium+docker的办法自动化抓取到所需表格的所有月份页面的实际网址url，然后批量下载保存成静态页面。
+
+>
+b. 手工办法：进入海关网站，手动下载每个月份页面的实际静态网页到本地。工作量初步估计：进出口量值的页面数=7年x12月x2类=`r 7*12*2`
+
+
+## 3.2下载静态pdf
+
+基本过程：
+
+a. 中国农产品进出口月度统计报告。进入[主站](http://wms.mofcom.gov.cn/article/ztxx/ncpmy/ncpydtj/200603/20060301783733.shtml)。
+
+b. 第一步是需要获得指定“主题”（例如“中国农产品进出口月度统计报告”）下所有月份的实际网址url。具体细节见后面的`R`代码（见节\@ref(auto-url)）。
+
+c. 根据获取的实际url，下载全部静态表格网页到本地，并批量命名。
+
+d. 通过下载所有月份的静态网页pdf（含有数据表），然后再进行数据整合。
+
+
+主要关注如下pdf页面表格：
+
+- 表12：2008年1月分地区出口情况
+
+- 表13：2008年1月分地区进口情况
+
+### 获得网站所有pdf的urls
+
+**操作提示**：
+
+- 2018年直接是.rar压缩包下载，全年月份pdf都有。
+
+
+```{r}
+# 0. load R pkgs
+
+require("rvest")
+require("xml2")
+require("httr")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+# navigate the home page
+url_report <-"http://wms.mofcom.gov.cn/article/ztxx/ncpmy/ncpydtj/200603/20060301783733.shtml"
+doc <-  read_html(url_report, encoding = "utf-8")
+
+# obtain past year home page: 2002-2019
+css_past <- "#zoom> p > a, #zoom> p > span> a, #zoom> p > span> span>a"
+### year title
+title_past <- doc %>%
+  html_nodes(css = css_past) %>%
+  html_text()
+### year urls
+url_latest <- doc %>%
+  html_nodes(css = css_past) %>%
+  html_attr("href")
+### table
+nav_urls <- tibble(year=title_past, urls=url_latest) %>%
+  filter(year!="2018年")    # filter year 2018 is rar zip file
+
+# get pdfs' urls: the latest years  2020
+css_pdf <- "#zoom > table > tbody > tr > td > p > a"
+
+title_latest <- doc %>%
+  html_nodes(css = css_pdf) %>%
+  html_text()
+
+url_latest <- doc %>%
+  html_nodes(css = css_pdf) %>%
+  html_attr("href")
+
+tbl_out <- tibble(title=title_latest, urls=url_latest)
+
+# get pdfs' urls: the past years 2002-2019 (not 2018)
+n_year <- nrow(nav_urls)
+i <- 2
+
+# loop for all years homepage
+### special css case in 2017 and 
+css_pdf <- "#zoom > table > tbody > tr > td > p > a, #zoom > table > tbody > tr > td > p > span >a, #zoom > table > tbody > tr > td > a"
+for (i in 1:n_year){
+  # the home page
+  doc_pdf <- read_html(nav_urls$urls[i])
+  
+  title_pdf <- doc_pdf %>%
+    html_nodes(css = css_pdf) %>%
+    html_text()
+  
+  url_pdf <- doc_pdf %>%
+    html_nodes(css = css_pdf) %>%
+    html_attr("href")
+  
+  tbl_pdf <- tibble(title=title_pdf, urls=url_pdf) %>%
+    filter(title!="")   # special 2002-2004
+  tbl_out <- bind_rows(tbl_out, tbl_pdf)
+}
+
+
+tbl_urls <- tbl_out %>%
+  mutate(year= as.numeric(str_extract(title, "(\\d{4})(?=年)")),
+         month_raw= str_extract(title, "(?<=年)(.+)(?=月)")) %>%
+  mutate(month = as.numeric(month_raw),
+         month = str_pad(month, width = 2, side="left", pad="0")) %>%
+   # file names
+  mutate(name_file = paste0(year, "-",month, ".pdf")) %>%
+  add_column(ID=1:nrow(.), .before = "title") 
+  
+
+
+### backup for check
+openxlsx::write.xlsx(tbl_urls, "tbl-urls-backup.xlsx", row.names = F)
+
+```
+
+
+
+
+### 下载全部pdf
+
+如果前述方法不能顺利执行，则可以尝试使用系统自带浏览器。（测试成功率较高）。
+
+
+```{r}
+# 0. load R pkgs
+library("RSelenium")
+library("xml2")
+
+tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx", sheet=1)
+
+path_pdf <- paste0("pdf/", tbl_urls$name_file)
+
+for (i in 11:nrow(tbl_urls)){
+  download.file(tbl_urls$urls[i], path_pdf[i],mode = "wb" )
+  
+  print(paste0("下载第", i, "个pdf文件：", tbl_urls$name_file[i] ))
+
+}
+
+
+```
+
+
+
+### 核对最终下载页面数
+
+（可能会少于后者）与实际下载页面数是否一致
+
+因为原始`tbl_com`里可能存在标题重复或错误，从而导致最终下载页面数会少于实际下载页面数。
+
+处理办法如下：
+- 列表最终下载页面，`tbl_files`。
+- 列表实际下载页面，`tbl_urls`。
+- 查看二者行数是否一致（前者少于后者9个）
+- 检查实际下载页面，`tbl_urls`的列`name_file`是否存在重复，以及哪些行重复
+- 追踪到tbl_com.csv，定位到这些行，并查明原因。一类原因是title错误，确认后直接在csv里修改好；二类原因是确实重复了，那可以直接忽略（因为下载后会自动覆盖这些重复urls）
+
+下面是检查代码：
+
+```{r, eval=FALSE}
+# read backup urls
+tbl_full <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T) 
+
+# files html path
+### you should change the dir according to the purpose
+### tbl15 or tbl16
+files_dir <- here::here("data", "v8", "04-trade-mofcom", "pdf")
+# files_dir <- here::here("data", "v8", "03-trade-custom", "05-tbl16-country-import","html-01-custom")
+
+files_html <- list.files(str_c(files_dir,"/"))
+page_url <- str_c(files_dir, files_html, sep = "/")
+
+# table the files
+tbl_files <- tibble(name_file=files_html,
+                    size = round(file.size(page_url)/1024,0)) %>%
+  add_column(ID = 1:nrow(.), .before = "name_file") %>%
+  mutate(year= str_extract(name_file, "(\\d{4})(?=-)"),
+         month= str_extract(name_file, "(?<=-)(\\d{2})")) %>%
+  mutate(path_file = paste0("pdf/", name_file)) 
+
+# check
+check_sum <- tbl_files %>%
+  group_by(year) %>%
+  summarize(n=n(), .groups="drop")
+
+# check file size not normal
+check_size <- tbl_files %>%
+  select(name_file, size) %>%
+  filter(size < 200) 
+
+
+```
+
+
+以下是**缺失性**核查的结果：
+
+- **表15**：对部分国家(地区)出口商品类章金额表：
+    - 2014-04 到2015-01，都是图片格式，无法识别。
+    - 2017-08。图片格式，无法识别。
+
+
+- **表16**：自部分国家(地区)进口商品类章金额表：
+    - 2016-12，缺失网页表格；但是可以下载到excel表格。 后面需要单独处理。保存在`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-D.xls`和`05-tbl16-country-import\hack-sooshu\extra-custom\2016-12-R.xls`
+
+
+## 3.3导出pdf为对应的csv文件
+
+具体pdf转csv代码请查看：
+
+- `scrap-v8-04-01-trade-region.Rmd`
+
+- `scrap-v8-04-02-trade-cat.Rmd`
+
+## 3.4合并全部csv表格有效数据
+
+
+
+## 3.5写出有效数据
