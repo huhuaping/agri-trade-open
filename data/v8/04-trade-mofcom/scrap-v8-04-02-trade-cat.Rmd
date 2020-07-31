@@ -149,12 +149,18 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
     select(str) %>%
     #mutate(str= str_replace(str, "-", "NA")) %>%
     separate(str,into = vars_eng, sep = "&")  %>%
-    mutate_at(all_of(vars_eng[-1]), .funs = as.numeric, digits=2)
+    mutate_at(all_of(vars_eng[-2]), .funs = as.numeric, digits=2)
 }
 
 ```
 
 ### pdf抓取为csv
+
+#### 提取策略
+
+- 缩小并定位pdf页码。通过表头信息来定位：“表：XXX重点大宗出口商品前3大出口市场情况”
+
+- 按重点农产品逐条搜索。
 
 #### 异常提示
 
@@ -176,9 +182,6 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 ```{r}
 # install.packages("pdftools")
 library("pdftools")
-
-# read backup urls
-tbl_urls <- openxlsx::read.xlsx("tbl-urls-backup.xlsx",colNames=T) 
 
 # files pdf path
 ### you should change the dir according to the purpose
@@ -204,10 +207,16 @@ n_end <-  c(70,60,50,25)
 n_style <- paste0("(#){", n_start, ",", n_end, "}")
 n_rep <-  c("&&&&","&&&", "&&", "&" )
 
-list_province <- c("北京","天津","河北","山西","内蒙古","辽宁","吉林","黑龙江","上海","江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南","广东","广西","海南","重庆","四川","贵州","云南","西藏","陕西","甘肃","青海","宁夏","新疆")
+# list of export cat 
+list_search <- c("大米", "豆粕", "鸡肉", "鸡肉制品","棉花","小麦","玉米", "植物油","猪肉")
 
-i <- 2002
-j <- 2
+# list of import cat 
+list_search <- c("小麦","玉米","稻谷和大米", "豆油", "菜籽油", "糖", "羊毛","棉花", "大豆", "豆饼、豆粕", "肉鸡")
+
+
+
+i <- 2006
+j <- 1
 k <- 1
 
 # loop years
@@ -225,34 +234,41 @@ for (i in 2020:2020) {
     
     
     # focus the pages
-    page_target <- which(str_detect(txt, "北京|新疆"))
-    page_raw <- txt[page_target]
-    if (length(page_raw)==0) stop("pdf文件读取出错，请核实！")
+    page_target_start <- which(str_detect(txt, "重点大宗出口"))
+    page_target_end <- which(str_detect(txt, "注：前3大市场"))
+    page_range <- page_target_start:(page_target_end[1])
+    txt_raw <- txt[page_range]
+    if (length(txt_raw)==0) stop("pdf文件读取出错，请核实！")
     
     # loop province
     #k <- 22
     tbl_province <- NULL
     for (k in 1:length(list_province)){
       # detect the page which contain certain province
-      page_province <- which(str_detect(txt, list_province[k]))
+      target_search <- which(str_detect(txt_raw, list_search[k]))
+      txt_search <- txt_raw[target_search]
+      
       # skip iteration and go to next iteration：k=22 in 2002-2
-      if (length(page_province)==0) {
+      if (length(txt_search)==0) {
         print(paste0(list_province[k], "不在pdf表格中，请核实！"))
         next
         }
     
       # pattern to obtain data
-      pattern_province <- paste0("(",list_province[k], ".*)(?=\r\n)")
+      pattern_cat <- paste0("(",list_search[k], ".+\r\n.+\r\n.+\r\n.+)")
       
-      dt_province <- str_extract_all(txt[page_target], 
-                                     pattern_province) %>%
+      dt_cat <- str_extract_all(txt_search, 
+                                     pattern_cat)  %>%
+        str_c("0 ",.) %>%
+        str_split(pattern = "\r\n") %>%
         unlist() %>%
-        as_tibble() %>%
+        str_trim(side = "both") %>%
+        as_tibble() %>%  
         mutate(value=gsub(" ", "#", value))%>%
         mutate(value=gsub(",", "", value)) %>%
         mutate(value=gsub("%", "", value))
       
-      check <- check_tbl(dt_province)
+      check <- check_tbl(dt_cat)
       
       # create names
       n_cols <- max(check$len)
@@ -260,14 +276,14 @@ for (i in 2020:2020) {
       
       
       tbl_split <- get_split(check,vars_eng = names_eng) %>%
-        add_column(page=page_province)
+        add_column(page=(page_target_start+target_search-1))
       
       tbl_province <- bind_rows(tbl_province, tbl_split)
-      print(paste0("第",k,"个省：",list_province[k]))
+      print(paste0("第",k,"个产品：",list_search[k]))
     }
     
     # obtain currency unit:
-      detect_unit <- str_extract(page_raw, "(单位.+)|(金额.+)")[1]
+      detect_unit <- str_extract(txt_raw, "(数量.+)|(金额.+)")[1]
       
       currency <- str_extract_all(detect_unit, "(?<=：|单位)(.+)") %>%
         str_trim(side = "both") %>%

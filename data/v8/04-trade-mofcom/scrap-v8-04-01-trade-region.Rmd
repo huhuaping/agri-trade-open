@@ -334,14 +334,6 @@ for (i in 2020:2020) {
 ### 合并代码
 
 ```{r, eval=FALSE, echo=FALSE}
-# set for chinese header
-vars_chn <- c("年度","月份", "序号","类章序号","类章名目" ,
-             "出口_当月", "出口_累计","进口_当月", "进口_累计",
-             "累计同期变动_出口","累计同期变动_进口")
-vars_eng <- c("Year","Month", "ID",
-             "cat", paste0("X", 1:7))
-cat_list <- paste0(str_pad(c(1:4,7:8,10:11,15,31,51:52), width = 2, pad = "0"),
-                   "章")
 
 # files path
 csv_dir <- here::here("data", "v8", "04-trade-mofcom", "csv-01-region")
