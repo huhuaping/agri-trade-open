@@ -1,5 +1,5 @@
 ---
-title: "中国商务部农产品贸易专题网站抓取"
+title: "中国商务部网站抓取1:各省农产品进出口贸易"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output:
@@ -81,7 +81,7 @@ require("tidyselect")
 
 ## 3.3导出pdf为对应的csv文件
 
-### 函数0：基础函数
+### 函数1：基础函数
 
 ```{r}
 # function for count white spaces
@@ -104,7 +104,7 @@ getModes <- function(x) {
 }
 ```
 
-### 函数3：核验原始表格
+### 函数2：核验原始表格
 
 ```{r}
 #dt <- rawpage
@@ -124,7 +124,7 @@ check_tbl <- function(tbl){
 ```
 
 
-### 函数4：得到清洗后的表
+### 函数3：得到清洗后的表
 
 ```{r}
 #tbl_check <- check

@@ -1,5 +1,5 @@
 ---
-title: "中国商务部农产品贸易专题网站抓取"
+title: "中国商务部网站抓取2:重点农产品前三进出口国"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output:
@@ -66,7 +66,7 @@ require("tidyselect")
 **《中国农产品进出口月度统计报告》**:
 
 - 文件标题："中国农产品进出口月度统计报告2020年1月"
-- 可下载年限范围：2002/01-2020/02
+- 可下载年限范围：2003/06-2020/03
 - 数据频率：月度
 - 文件格式：pdf-制式表格
 
@@ -90,7 +90,7 @@ require("tidyselect")
 
 ## 3.3导出pdf为对应的csv文件
 
-### 函数0：基础函数
+### 函数1：基础函数
 
 ```{r}
 # function for count white spaces
@@ -113,7 +113,7 @@ getModes <- function(x) {
 }
 ```
 
-### 函数3：核验原始表格
+### 函数2：核验原始表格
 
 ```{r}
 #dt <- rawpage
@@ -133,7 +133,7 @@ check_tbl <- function(tbl){
 ```
 
 
-### 函数4：得到清洗后的表
+### 函数3：得到清洗后的表
 
 ```{r}
 #tbl_check <- check
@@ -146,7 +146,7 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
       mgsub::mgsub(value, pattern = style, 
                    replacement =rep, perl = F) # for other
       ) ) %>%
-    select(str) %>%
+    select(str, page,type) %>%
     #mutate(str= str_replace(str, "-", "NA")) %>%
     separate(str,into = vars_eng, sep = "&")  %>%
     mutate_at(all_of(vars_eng[-2]), .funs = as.numeric, digits=2)
@@ -158,23 +158,36 @@ get_split <- function(tbl_check, style=n_style, rep =n_rep,vars_eng=names_eng){
 
 #### 提取策略
 
-- 缩小并定位pdf页码。通过表头信息来定位：“表：XXX重点大宗出口商品前3大出口市场情况”
+- 缩小并定位pdf页码。通过表头信息来定位：“商品名称及前3”。
 
-- 按重点农产品逐条搜索。
+- 进口和出口一次性识别。通过页码范围匹配，来确定贸易类型。
+
+- 按重点农产品逐条搜索。每个重点产品都有三个主要国家（共4行）。
+
+    - 所以要先用一次map函数，然后再unnest。
+    - 提前把页码配对，在unnest操作时，就自动补齐全部页码了。
 
 #### 异常提示
 
-2002/01-2003/02：一张表跨两页。只有出口。**解决办法**：已处理好。
--   2002/01和2002/02，没有上年同期金额。
 
-2003-03~2004-12：省份异常，安徽开头，重庆结尾。**解决办法**：已处理好。
+2003-05及以前没有重点农产品进出口统计表。
 
-2005-01~2005-12：省份异常，上海开头，黑龙江结尾。**解决办法**：已处理好。
-- 2005-02 pdf格式异常，无法读取。**解决办法**：手动处理
+2003-06 国家名单存在换行问题。**解决办法**：暂时没有好办法。
 
-2006-01：省份排序异常。上海开头，黑龙江结尾。**解决办法**：已处理好。
+2005-02 pdf格式异常，无法读取。**解决办法**：手动处理
 
-2016-09: 进出口表被整合在一块，没法识别。**解决办法**：手动处理/上年同期。
+大问题：存在一个产品跨两页的问题。**解决办法**：暂时没有好办法。
+
+- 2006-02 棉花进口和羊毛进口
+
+2016-09: 没有重点产品进出口国别数据。
+
+
+**数据口径问题**：
+
+- 2006年以前只有出口统计表，没有进口统计表。
+
+- 早年数据，有些重点产品并没有监测统计。例如羊毛、豆油、菜籽油等。
 
 
 #### 抓取代码
@@ -208,62 +221,84 @@ n_style <- paste0("(#){", n_start, ",", n_end, "}")
 n_rep <-  c("&&&&","&&&", "&&", "&" )
 
 # list of export cat 
-list_search <- c("大米", "豆粕", "鸡肉", "鸡肉制品","棉花","小麦","玉米", "植物油","猪肉")
+list_export <- c("大米", "豆粕", "鸡肉", "鸡肉制品","棉花","小麦","玉米", "植物油","猪肉")
 
 # list of import cat 
-list_search <- c("小麦","玉米","稻谷和大米", "豆油", "菜籽油", "糖", "羊毛","棉花", "大豆", "豆饼、豆粕", "肉鸡")
+list_import <- c("小麦","玉米","稻谷和大米",  "菜籽油", "糖", "棉花", "大豆", "豆饼、豆粕", "肉鸡")
 
+# cross select
+list_search <- c("大米", "小麦","玉米","大豆", "豆粕", 
+                 "猪肉", 
+                 "植物油","菜籽油",
+                 "豆油","棉花","羊毛")
 
-
-i <- 2006
-j <- 1
+i <- 2003
+j <- 6
 k <- 1
 
 # loop years
-for (i in 2020:2020) {
+for (i in 2007:2019) {
   # filter year and month
   tbl_ym <- tbl_files %>%
     filter(year==i)
 
   i_len <- nrow(tbl_ym)
   # loop months
-  for (j in c(1:3)) {
+  for (j in c(1:12)) {
     # read pdf as text
     pth<- tbl_ym$path_file[j]
     txt <- suppressWarnings(suppressMessages(pdf_text(pth)))
     
-    
     # focus the pages
-    page_target_start <- which(str_detect(txt, "重点大宗出口"))
-    page_target_end <- which(str_detect(txt, "注：前3大市场"))
-    page_range <- page_target_start:(page_target_end[1])
-    txt_raw <- txt[page_range]
+    page_target_all <- which(str_detect(txt, "商品名称及前"))
+    page_target_mid <- which(str_detect(txt, "重点大宗进口商品"))
+    if (length(page_target_mid)==0){
+      page_export <- page_target_all
+    } else {
+      page_export <- page_target_all[1]: (page_target_mid-1)
+    }
+    
+    txt_raw <- txt[page_target_all]
+    
     if (length(txt_raw)==0) stop("pdf文件读取出错，请核实！")
+    
+    # obtain title row
+    title_target <-  which(str_detect(txt_raw, "重点大宗.{2}商品前.+大.{2}市场情况"))
     
     # loop province
     #k <- 22
-    tbl_province <- NULL
-    for (k in 1:length(list_province)){
+    tbl_com <- NULL
+    for (k in 1:length(list_search)){
       # detect the page which contain certain province
       target_search <- which(str_detect(txt_raw, list_search[k]))
       txt_search <- txt_raw[target_search]
       
       # skip iteration and go to next iteration：k=22 in 2002-2
       if (length(txt_search)==0) {
-        print(paste0(list_province[k], "不在pdf表格中，请核实！"))
+        print(paste0(list_search[k], "不在pdf表格中，请核实！"))
         next
         }
     
       # pattern to obtain data
       pattern_cat <- paste0("(",list_search[k], ".+\r\n.+\r\n.+\r\n.+)")
       
+      page_loc<- page_target_all+target_search-1
+      split_country <- function(x){
+        y <- str_split(x,pattern = "\r\n") %>%
+          unlist()
+      }
+      
       dt_cat <- str_extract_all(txt_search, 
                                      pattern_cat)  %>%
         str_c("0 ",.) %>%
-        str_split(pattern = "\r\n") %>%
-        unlist() %>%
         str_trim(side = "both") %>%
-        as_tibble() %>%  
+        unlist() %>%
+        as_tibble() %>%
+        mutate(page = page_target_all[target_search]) %>%
+        mutate(type = ifelse(page %in% page_export, "出口", "进口")) %>%
+        mutate(value=map(.x = value, .f =split_country )) %>%
+        unnest(cols = "value") %>%
+        mutate(value=str_trim(value,side = "both")) %>%
         mutate(value=gsub(" ", "#", value))%>%
         mutate(value=gsub(",", "", value)) %>%
         mutate(value=gsub("%", "", value))
@@ -274,78 +309,77 @@ for (i in 2020:2020) {
       n_cols <- max(check$len)
       names_eng <- c("V0", paste0("V",1:n_cols ))
       
-      
+      # split by whitespace
       tbl_split <- get_split(check,vars_eng = names_eng) %>%
-        add_column(page=(page_target_start+target_search-1))
+        mutate(V1 = str_replace(V1, list_search[k], "合计")) %>%
+        add_column(cat=list_search[k], .before = "V0") %>%
+        filter(!is.na(V0))
       
-      tbl_province <- bind_rows(tbl_province, tbl_split)
-      print(paste0("第",k,"个产品：",list_search[k]))
-    }
-    
-    # obtain currency unit:
-      detect_unit <- str_extract(txt_raw, "(数量.+)|(金额.+)")[1]
+      # combine cat list
+      tbl_com <- bind_rows(tbl_com, tbl_split)
       
-      currency <- str_extract_all(detect_unit, "(?<=：|单位)(.+)") %>%
-        str_trim(side = "both") %>%
-        str_replace("：", "")
-      if (length(currency)==0) stop("金额单位无法识别，请核实！")
-      tbl_unit <- tibble(page=page_target, currency= currency )
+      # check actual rows and theory rows
+      rows_act <- nrow(tbl_split) 
       
-    
-      # obtain trade type: export or import
-      title_target <- which(str_detect(txt, "表.+分地区"))
-      txt_page <- txt[title_target]
-      detect_title <- str_extract(txt_page, "(表.+分地区.{2}情况)")
-      type <- str_extract(detect_title, ".{2}(?=情况)")
-      if (length(page_raw)==2 & (page_target[1]!=page_target[2])){
-        tbl_title<- tibble(page=page_target, type=type)
-      } else {
-        tbl_title<- tibble(page=title_target, type=type)
+      if (length(target_search) == 1){
+         rows_theory <- 4
+      } else if (length(target_search) == 2){
+         rows_theory <- 4*2        # two table
       }
-    
-      tbl_out <- tbl_province %>%
-        left_join(., tbl_unit, by = "page") %>%
-        left_join(., tbl_title, by = "page") %>%
-          add_column(year= i, .before = "V0") %>%
-          add_column(month= str_pad(j, width = 2, pad = "0"), 
-                     .before = "V0") %>%
-        select(year, month, type, currency, everything()) %>%
-        mutate(V0=str_replace(V0, "省|市|自治区", ""),
-               V0= str_replace(V0,"壮族|回族|维吾尔", "")) %>%
-        mutate(V0= factor(V0, levels=list_province)) %>%
-        arrange(type, V0)
-  
-   # check actual rows and theory rows
-    rows_act <- nrow(tbl_out) 
-    
-    if (length(title_target) == 1){
-       rows_theory <- 31
-    } else if (length(title_target) == 2){
-       rows_theory <- 31*2        # two table
+      
+      
+      if (rows_theory == rows_act) {
+        print(paste0("恭喜！实际数据点数与理论一致！", 
+                     i,"年", j, "月，第",k ,"个产品", list_search[k],
+                     "。数据点数=", rows_act))
+      } else {
+        print(paste0("不妙！实际数据点数与理论不一致！", 
+                     i,"年", j, "月，第",k ,"个产品", list_search[k],
+                     "。理论数=", rows_theory, ";实际数=", rows_act))
+      }
+      
+      # wait to see the result
+      Sys.sleep(1)
+      if (rows_theory != rows_act) warning("请检查，数据量与预期不一致！")
+        
+    # end loop k
     }
     
+    # obtain  unit row:
+      detect_unit <- str_extract(txt_raw[title_target], "(数量：.+)")[1]
+      # obtain quantity unit:
+      quantity <- str_extract(detect_unit, "(?<=数量：)(.+)(?=金额)") %>%
+        str_trim(side = "both") 
+      # obtain currency unit:
+      currency <- str_extract(detect_unit, "(?<=金额：)(.+)") %>%
+        str_trim(side = "both") 
+      if (length(currency)==0) stop("金额单位无法识别，请核实！")
+      
+      tbl_out <- tbl_com %>%
+        add_column(quantity= quantity, .before = "page") %>%
+        add_column(currency= currency, .before = "page") %>%
+        add_column(year= i, .before = "V0") %>%
+        add_column(month= str_pad(j, width = 2, pad = "0"), 
+                   .before = "V0") %>%
+        select(year, month, type,quantity, currency, everything())
+  
+    # checking when there were inconsistent
+    ttt <- tbl_out %>%
+      group_by(cat,type) %>%
+      summarize(n=n(), .groups="drop")
     
-  if (rows_theory == rows_act) {
-    print(paste0(i,"年", j, "月。恭喜！实际数据点数与理论一致！数据点数=", rows_act))
-  } else {
-    print(paste0(i,"年", j, "月。不妙！实际数据点数与理论不一致！实际数=", rows_act, ";理论数=", rows_theory))
-  }
-  
-  # checking when there were inconsistent
-  ttt <- tbl_out %>%
-    group_by(type) %>%
-    summarize(n=n(), .groups="drop")
-  
-  # wait to see the result
-  Sys.sleep(1)
-  
- if (rows_theory != rows_act) warning("请检查，数据量与预期不一致！")
-  
-  # files csv path
-  path_csv <- paste0("csv-01-region/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
-  write.csv(tbl_out, path_csv, row.names = F)
+   
+    # files csv path
+    path_csv <- paste0("csv-02-cat/",i, "-",str_pad(j, width = 2, pad = "0"), ".csv")
+    write.csv(tbl_out, path_csv, row.names = F)
+    
+    # wait to see the result
+    # Sys.sleep(3)
+    print(paste0(i,"年", j, "月，数据抓取和写出结束。"))
 
+  # end loop month  
   }
+# end loop year  
 }
 
 ```
@@ -354,7 +388,7 @@ for (i in 2020:2020) {
 
 ### 异常提示
 
-2002/01：贸易类型没有识别出来。**解决办法**：已处理好。
+2006/02：贸易类型没有识别出来。**解决办法**：已处理好。
 
 ### 合并代码
 
