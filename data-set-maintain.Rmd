@@ -1,0 +1,213 @@
+---
+title: "数据集维护更新"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::word_document2: 
+    fig_caption:  true
+    toc: yes
+    toc_depth: 4
+    reference_docx: tech-report-reference.docx
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document: 
+    latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: 3
+    fig_caption: yes
+always_allow_html: yes
+documentclass: article
+bibliography: bib-agri-tech.bib
+biblio-style: "apalike"
+link-citations: true
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
+pagestyle: "headings"
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+library('bookdown')
+library('knitr')
+library('xlsx')
+library("openxlsx")
+#install.packages('tidyr')
+#install.packages('plyr')
+library('tidyr')
+library('dplyr')
+library('stringr')
+library('tidyverse')
+library('ggplot2')
+library("scales")
+#install.packages("gridExtra")
+library("gridExtra")
+#install.packages("magrittr")
+library("magrittr")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+require("ggthemes")
+require("ggrepel")
+require("lubridate")
+#require(kableExtra)
+```
+
+# 体系框架
+
+## 数据管理的理念
+
+**实际需求导向**。两个项目涉及到一个密切相关的数据集合（“旱区农业技术发展报告（2012-2019）”、“中科院重大食物安全咨询项目（2016-2018）”），数据管理来自实际研究的需求。数据对象来看，以旱区**省份**为基本研究单位，时间频率为**年度**。数据的新增变更应坚持“如无必要，不增实体”的功利性原则，以保证数据的利用率。
+
+**可扩展和更新**。因为数据来源各不相同，随时间推移，新的指标和数据会不断加入。要求能够快速扩展和准确更新。更新和维护工作一般是根据研究任务而定，基本上是按年度进行。其中，需要比较繁重的手工录入和校正工作，自动化编码可以使用的场景比较有限，因为数据来源和口径都比较混乱。
+
+**独立性和全局性**。撰写研究报告时，具体内容仅涉及到特定**数据子集**，基于内容的数据子集使用率最高，因此需要保持这部分子集的独立性，以方便随时审查和调用。全局性的**超大数据集**，并不是一个重要的目的，一般使用率比较低，更应该把它视作是自发维护后的一个结果（副产物）。
+
+
+
+## 数据集体系的构架
+
+### 文件夹系统
+
+**文件夹系统**：数据存放的实体地址，应该需要根据数据处理的流程来存放。
+
+- 原始文件夹（data-raw）：**原始资料**【git忽略】。各种形态的素材资料，如统计年鉴（excel或caj）、研究报告（pdf）、网页数据等。
+
+- 摘要文件夹（data-extract）：**摘要数据**【git忽略】。从原始文件中提取出的数据表文件：如.xsl、.csv等文件。尽量与原始文件风格保持一致。
+
+- 处理文件夹（data-process）【git控制】：**处理数据**。处理成**标准数据集**文件，以long format的形式（variables-year-province-value）。
+
+- 分析文件夹（data-analysis）：**分析数据**【git控制】。体系化后的数据文件，可以直接用于分析。仍旧以long format形式呈现。
+
+
+### 变量定义系统
+
+**变量定义系统**：标准数据集中，唯一需要设定的是变量命名。要求做到：（1）唯一性，变量增多后命名的唯一性可能会受到挑战；（2）定位性，变量命名能反映数据集空间维度的坐标特征，如哪个区、什么节点、何种值；（3）可读性，变量命名能较快速地揭示变量的实际经济意义；（4）易用性，变量名不能太长，避免引用过于复杂。
+
+ **区块命名法**：根据数据空间维度关系，按**“区-部-节-点”**的原则设置4个区块段，保证变量命名的唯一性。
+ 
+- `block1`：以v0x表达，代表最高分区。如v04表示**科技**。
+- `block2`：代表所属区下面的某个分部，如v04_gx表示**科技**分区下的**高校**分部。
+- `block3`：代表所属分部下面的某个小节，如v04_gx_nbzc表示**科技**分区下的**高校**分部的**内部支出**。
+- `block4`：代表所属小节下面的某个具体点值，为最末一级。如v04_gx_nbzh_jcyj表示**科技**分区下、**高校**分部、**内部支出**、**基础研究**。
+
+**变量版本迭代（version）**：根据对四个必备特征的权衡，变量定义系统可能会发生改变，因此需要标识不同的变量版本。如`v2019.8`表示某次调整后的变量定义体系。应附注记录改变的主要依据：如“保持与年鉴表达的一致性”
+
+- 如果要新增变量命名，直接按最新版本规则来定义，新增即可。（按新的命名规则，并记录版本号）
+- 如果要调整变量命名，不要删除旧的变量命名，直接在其后新增一条记录即可。（按新的命名规则，并记录版本号）
+
+**附属信息**：变量取值在数据更新时也可能面临统计口径和单位的变化。此外，必要的中文信息也是很重要。因此需要添加必要的**附属信息**。
+
+- 单位（unit）：变量取值的单位。
+- block1-block4对应中文含义：
+
+
+**自动生成变量名**：根据**“区-部-节-点”**的原则直接来生成变量名，基本能保证以上的四个基本命名要求。
+
+- 自动生成变量名：如v04_gx_nbzh_jcyj
+- 自动生成摘要标签： 如“高校_内部支出_基础研究”
+
+### 替换更新的问题
+
+如果旧有的数据集是按老版本定义（如`v2018.6`），但是部分变量在新的版本定义（如`v2019.8`）发生了改变，那么则需要变更刷新数据，涉及的问题根据数据集在流程中的位置而定：
+
+- **原始数据**：无影响
+- **摘要数据**：无影响
+- **处理数据**：可变更刷新
+- **分析数据集**：必须变更刷新
+
+# 数据集说明
+
+## 进出口贸易数据
+
+### 中国海关数据
+
+
+#### 中国海关总署网站《统计月报》。
+
+- 存放位置：`D:\github\agri-trade-open\data\v8\03-trade-custom`
+
+- [中国海关总署](http://www.customs.gov.cn/customs/302249/302274/302277/index.html)
+
+- 网页标题： "（4）2019年2月进出口商品类章总值表（人民币值）"
+
+- 时间范围：月度数据。2014年6月-2020年5月
+
+- 网页内容: 
+    - 一张表；一部分
+    - 表头：类章、出口（本月当期/本月累计）、进口（本月当期/本月累计）、累计比去年同期变动％
+    
+#### 搜数网《统计月报》
+
+- 存放位置：`D:\github\agri-trade-open\data\v8\03-trade-custom`
+
+- 数据网站：搜数网[人大权限](https://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=136)
+
+    - 搜数标题："2000年5月中国出口主要商品量值表统计"/"2000年5月中国进口主要商品量值表统计"
+    - 可下载年限范围：2000/1-2019/12
+    - 文件格式：html-形式表格
+
+- 时间范围：月度数据。2000年1月-2014年5月
+
+- 网页标题： "2000年1月中国对部分国家(地区)出口商品类章金额表统计(一)/.../(十一)"
+
+- 网页内容: 农产品对部分国家(地区)出口商品类章金额表：
+
+    - 每个月多张表，每张表1个部分
+    - 指标（数据列）：月度-国家金额【按人民币】
+    - 样本单位（数据行）：商品类章
+    - 数据频率：月度
+
+    
+
+### 商务部数据
+
+
+#### 《中国农产品进出口月度统计报告》
+
+数据目标：
+
+- 农产品(31个省区)分地区进/出口情况
+
+- 我国各省区农产品进/出口的趋势和关系。
+
+存放位置：
+
+- `D:\github\agri-trade-open\data\v8\04-trade-mofcom`
+
+中国商务部-[农产品贸易专题网站](http://wms.mofcom.gov.cn/article/ztxx/ncpmy/)
+
+**《中国农产品进出口月度统计报告》**:
+
+- 文件标题："中国农产品进出口月度统计报告2020年1月"
+- 可下载年限范围：2002/01-2020/02
+- 数据频率：月度
+- 文件格式：pdf-制式表格
