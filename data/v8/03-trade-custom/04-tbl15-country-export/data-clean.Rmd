@@ -1,0 +1,66 @@
+---
+title: "数据清洗"
+author: "hhp"
+date: "2020/9/23"
+output: html_document
+---
+
+
+```{r}
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+
+```
+
+# 描述性分析
+
+## 数据清洗
+
+下面我们简要分析原始数据集，看看是不是有各种问题。发生发生改变所发生的还不发多少个双方的。
+
+进行相应的数据清洗工作。
+
+```{r}
+
+tbl_raw <- read.csv(file = "source01-custom-tbl15-country-export-2020-07-26.csv",
+         header = T)
+
+# see data structure 看看数据结构
+str(tbl_raw)
+
+
+```
+
+
+### 检查数据错误
+
+```{r}
+
+tbl_clean <- tbl_raw %>% 
+  select(country) %>%
+  unique() %>%
+  unlist()
+
+tbl_clean <- tbl_raw %>% 
+  filter(period == "利")
+
+tbl_smry <- tbl_raw %>%
+  filter(period == "利") %>%
+  group_by(year, month,currency) %>%
+  summarise(n_total = n())
+
+```
+
+
+
+```{r}
+# check 2015-05 csv file
+
+tbl_check <- read.csv("csv-custom/2015-05.csv", header = T) %>%
+  filter(!period %in% c("A", "B"))
+
+```
+
+

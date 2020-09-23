@@ -82,8 +82,8 @@ list_cat <- c("总值",
 path_tbl <- "//*[@id='easysiteText']/table"
 
 
-i <- 2017
-j <- 8
+i <- 2015
+j <- 5
 k <- 1
 
 for (i in 2020:2020) {
@@ -145,7 +145,7 @@ for (i in 2020:2020) {
       # gather the table
       tbl_shape <- tbl_cat  %>%
         gather(key = "country_period", value="value", -cat) %>%
-        separate(col = "country_period", into = c("country", "period")) 
+        separate(col = "country_period", into = c("country", "period"),sep = "_") 
     
       # add year-month
       tbl_add <- tbl_shape %>%
@@ -237,8 +237,14 @@ for (i in 1:length(csv_files)) {
 
 # checking when there were inconsistent
 ttt <- tbl_out %>%
-  group_by(country) %>%
+  #filter(period =="利") %>%
+  select(country) %>%
+  unique() %>%
+  arrange(country)
+  group_by(year, month) %>%
   summarize(n=n())
+
+check <- tbl_out
 
 tbl_bad <- tbl_out %>%
   filter(country=="中国")
@@ -257,11 +263,12 @@ tbl_tidy <- tbl_out %>%
   mutate(currency = str_replace(currency, ("(万元)"), "万")) %>%
   mutate(currency = str_replace(currency, ("(?!千美元)(千美)"), "千美元"))  %>%
   # add source
-  add_column(source="custom")
+  add_column(source="custom") %>%
+  mutate(country = str_replace(country, "智利 利", "智利"))
 
 
 ### check the unique country
-# unique(tbl_tidy$country)
+ unique(tbl_tidy$country)
 
 
 
@@ -275,3 +282,6 @@ tbl_tidy <- tbl_out %>%
 path_out <- str_c("source01-custom-tbl15-country-export-", Sys.Date(),".csv")
 write.csv(tbl_tidy, path_out, row.names = F)
 ```
+
+
+
