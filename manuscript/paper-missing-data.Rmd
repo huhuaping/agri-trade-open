@@ -1,0 +1,175 @@
+---
+title: "缺失数据的系统分析"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: create-template.docx
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document: 
+    latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: 3
+    fig_caption: yes
+bibliography: bib-paper.bib
+biblio-style: "apalike"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
+pagestyle: "headings"
+---
+
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source("../R/set-global.R")
+```
+
+
+
+## 数据缺失问题
+
+主要是想问以下两个问题：
+
+1·关于描述性统计分析的思路是否正确
+
+> 打算按先按国家进行分析，挑选了既是一带一路国家，又是上合组织国家的“印度、巴基斯坦、俄罗斯和哈萨克斯坦”四个国家进行分析，后期还能进一步分析政策对贸易的影响。前期描述性分析主要是制作图表。        
+
+2·数据缺失问题该怎么处理？
+
+> 将以上国家的数据进行了筛选，却发现很多月度数据缺失的问题，以2017年的印度数据为例（如下图），这样的话，是否应该挑数据较为全面的国家进行分析？或者是以年或季为分析单位（也会需要数据更新）？
+
+
+```{r, fig.cap= "缺失数据情形示例", dpi =120}
+include_graphics("pic/missing-data.jpg")
+```
+
+
+
+## 缺失数据需要的R包
+
+首先，安装必要的R packages<sup>[1]</sup>。
+
+```
+install.packages("VIM")
+install.packages("naniar")
+install.packages("missMDA")
+install.packages("Amelia")
+install.packages("mice")
+install.packages("missForest")
+install.packages("FactoMineR")
+#install.packages("Tidyverse")
+```
+
+```{r, eval=FALSE, echo=FALSE}
+# run this chunk only once time
+install.packages("VIM")
+install.packages("naniar")
+install.packages("missMDA")
+install.packages("Amelia")
+install.packages("mice")
+install.packages("missForest")
+install.packages("FactoMineR")
+#install.packages("Tidyverse")
+```
+
+.footnote[
+[1] 请参看这份教程[Handling missing values with R](http://juliejosse.com/wp-content/uploads/2018/06/DataAnalysisMissingR.html)
+
+]
+
+
+## 读取数据
+
+```{r}
+library(here)
+library(VIM)
+library(FactoMineR)
+library(missMDA)
+
+tbl_export <- read.csv("../data/v8/03-trade-custom/04-tbl15-country-export/source01-custom-tbl15-country-export-2020-09-23.csv", header = T) %>%
+  add_column(data_set ="export")
+
+tbl_import <- read.csv("../data/v8/03-trade-custom/05-tbl16-country-import/source01-custom-tbl16-country-import-2020-07-26.csv", header = T) %>%
+  add_column(data_set ="import")
+
+tbl_all <- bind_rows(tbl_export, tbl_import)
+
+list_cat <- "03章"
+
+tbl_reshape <- tbl_export %>%
+  filter(cat %in% list_cat) %>%
+  mutate(unit = ifelse(currency =="千美元",  "dollar",
+                                ifelse(currency =="万人民币", "yuan", NA))) %>%
+  unite(col= "vars_unit",  sep = "_", period, unit) %>%
+  spread(key = "vars_unit", value = "value")
+  
+
+head(tbl_reshape)
+#unique(tbl_reshape$cat)
+```
+
+
+```{r}
+DT::datatable(tbl_reshape)
+```
+
+
+
+
+## 分析数据缺失情况
+
+```{r}
+library(naniar)
+
+tbl_reshape %>%
+  group_by(country) %>%
+  miss_var_summary() %>%
+  filter(str_detect(variable, "dollar" )) %>%
+  arrange(country)
+```
+
+
+
+```{r}
+
+gg_miss_var(tbl_reshape, facet = country,show_pct =T)
+
+```
+
+
+```{r}
+res<-summary(aggr(tbl_reshape, sortVar=TRUE))$combinations
+
+```
+
+```{r}
+res[rev(order(res[,2])),]
+```
+
