@@ -1,37 +1,31 @@
-## 欢迎来到农业贸易研究项目
+欢迎来到农业贸易研究项目
 
-You can use the [editor on GitHub](https://github.com/huhuaping/agri-trade-open/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+# Discuss 2020-10-7
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+大家好。我们2020年10月7日（周三）下午2：00-4：00在C524开小组会。
 
-### Markdown
+## 讨论会安排
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+1. 武庆华和高露露汇报R方法使用（30分钟），做个简单的汇报材料。
 
-```markdown
-Syntax highlighted code block
+2. 写作组介绍描述分析进展和困难（30分钟），要有一个汇报材料。
 
-# Header 1
-## Header 2
-### Header 3
+3. 我来讲一下解决思路和后面写作方向（40分钟）
 
-- Bulleted
-- List
+## 会议记录
 
-1. Numbered
-2. List
+## 下一步工作任务
 
-**Bold** and _Italic_ and `Code` text
+1. 利用**EPS全球统计数据/分析平台** [人大数据库入口（需要权限）](http://libproxy.ruc.edu.cn/ermsClient/eresourceInfo.do?rid=5) 进一步分析具体农产品的国别贸易月度数据。
 
-[Link](url) and ![Image](src)
-```
+2. 论文写作任务的改进机制：下载阅读有价值的研究论文，形成文献综述，提出论文写作的工作方案或改进方案。
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+3. 提出若干研究思路，供大家跟进。
 
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/huhuaping/agri-trade-open/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+    a. 数据追踪和分析我们只能充分进行挖掘（数据库）和利用（定量分析）。大家要注意一个趋势，就是善于发现和使用**开源数据库**或者一些“新兴”的数据平台。例如，全球供应链数据平台[Eora](https://worldmrio.com/)
+    
+    b. 单纯了贸易数据，并不足以保证写出有一定质量的论文。大家需要还需要关注相关国家的农业政策体系、农业发展战略和布局、农业基础和潜力等。
+    
+    c. 关于各国农业政策的分析，可以利用各国的众多政策文件进行词句定量分析（sentence mining）。
+    
+    d. 各国农业政策及社会福利分析，可以参考OECD的发展报告《Agricultural Policy Monitoring and Evaluation》 见[OECD网站](https://www.oecd.org/agriculture/topics/agricultural-policy-monitoring-and-evaluation/)。
