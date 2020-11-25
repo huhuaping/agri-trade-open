@@ -1,0 +1,300 @@
+---
+title: "爬虫技术RSelenium + Firefox：机构代码自动化查询"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    number_sections: no
+    toc: no
+    fig_caption: yes
+    toc_float: yes
+  bookdown::word_document2:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    reference_docx: create-template.docx
+always_allow_html: yes
+---
+
+```{r, echo=FALSE}
+# read R script to set the global options
+source("../R/set-global.R")
+
+# read R script for checking packages 
+source("../R/check.pkg.R")
+
+```
+
+
+> 欢迎点击观看本文的演示视频：
+
+> - [国内观看线路1](https://d.seit2019.xyz/wp-content/uploads/2020/10/spider-institution-code.mp4)
+> - [国外观看线路2](https://d.seit2019.xyz/wp-content/uploads/2020/10/spider-institution-code.mp4)
+
+\newpage
+
+**摘要**：本文及配套代码演示，只简单抓取了10个机构的工商信息。如果要进行成百上千的批量化查询，大部分工商查询平台都需要进行付费服务。对于网络数据爬虫的新手，尝试本文这类相对简单一点的抓取操作，将有助于更好地理解网络数据爬取的基本原理和过程。
+
+# 1. 研究目标
+
+一些工商查询平台，可以免费获取企事业机构的公开信息。本文介绍了如何通过R编程，自动化查询、获取并整理得到企事业机构的公开信息。
+
+目前，互联网工商查询平台众多，披露公开信息和防爬虫机制各有差异。下面列出了三个查询平台的特点：
+
+1.[**全国组织机构统一社会信用代码公示查询平台**](https://www.cods.org.cn/)
+
+- 不需要登陆
+
+- 但是有最新极验证控制【拉动滑块，匹配验证】，但是图片是打乱的，具有机器人防抓机制。有待破解，暂未测试！
+
+2.[**企查查**](https://www.qcc.com/)
+
+- 不登录状态下，自动化查询有数量限制识别机制（实测不超过50条查询）
+
+- 若是登陆，则有"滑块拉到最右侧"的机器人防抓机制。有待破解，暂未测试！
+
+3.[**企猫查**](https://www.qichamao.com/)
+
+- 不登录状态下，自动化查询**没有**数量限制识别机制。
+
+- 而且还能通过抓取的href链接，直接访问特定机构的信息页面。
+
+- 但是机构收录数量感觉不如**企查查**全面。
+
+- 注意网速会有一定的打断影响。
+
+下面我们以第三个平台[**企猫查**](https://www.qichamao.com/)为例，进行R编程自动化查询我们需要的企事业机构信息。
+
+
+# 2. 爬虫原理
+
+
+一般情况下，我们需要用到两项技术：
+
+- 技术1：`docker` + `RSelenium`组合实现虚拟机或本地自动抓取。基本上是把
+R接入了主流的爬虫机制世界里去。
+
+- 技术2：`ROpenCVLite` + `Rvision`解决滑块验证登录等问题。对于比较复杂一点的防爬虫机制（图片验证、滑块验证等）可能需要用到机器学习方法，进行人工智能验证通过。
+
+因为本文使用的第三个工商查询平台[**企猫查**](https://www.qichamao.com/)，不需要用到验证登陆问题，而且网站界面比较简单，所以我们实际只需要如下具体技术：
+
+- `RSelenium`包 + Firefox本地浏览器。因此需要电脑端安装Firefox浏览器。RSelenium包的具体函数使用，可以看[官方文档](https://github.com/ropensci/RSelenium)。
+
+- html网页的一些基本知识，包括CSS和xpath等。可参看[网络教程](https://www.w3schools.com/xml/xpath_intro.asp)。
+
+- R使用中常用的字符串操作、表格匹配等。如regex正则表达（[简要教程](https://stringr.tidyverse.org/articles/regular-expressions.html)）。
+
+- 其他基本R操作技术。
+
+# 3. 实现过程
+
+
+## 3.1 准备必要的packages
+
+
+
+```{r, echo = TRUE}
+# check packages, load pkgs, and install pkgs if not exist
+packages<-c("tidyverse", "tidyselect", "stringr",
+            "openxlsx", "DT", "here" ,
+            "RSelenium", "rvest", "xml2", "httr")
+check.packages(packages)
+
+```
+
+## 3.2 待查询的机构名单
+
+```{r, echo = TRUE}
+# get the unique institution name
+list_ins <-  read.csv("data/tbl-list.csv")
+
+list_ins %>%
+  datatable(caption = "待查询的机构名单（n=10）") 
+```
+
+
+## 3.3 RSelenium调用Firefox浏览器
+
+在Rstudio中运行下列代码，可以调用并打开你电脑上的Firefox浏览器。
+
+
+
+```{r, eval=FALSE, echo=TRUE}
+# require(RSelenium)
+driver <- rsDriver(browser=c("firefox"), port = 4545L)
+remDr <- driver[["client"]]
+```
+
+
+
+注意看Rstudio里Console面板的进度信息，正常情况下，会显示：
+
+```
+checking Selenium Server versions:
+BEGIN: PREDOWNLOAD
+BEGIN: DOWNLOAD
+BEGIN: POSTDOWNLOAD
+checking chromedriver versions:
+BEGIN: PREDOWNLOAD
+BEGIN: DOWNLOAD
+BEGIN: POSTDOWNLOAD
+checking geckodriver versions:
+BEGIN: PREDOWNLOAD
+BEGIN: DOWNLOAD
+BEGIN: POSTDOWNLOAD
+checking phantomjs versions:
+BEGIN: PREDOWNLOAD
+BEGIN: DOWNLOAD
+BEGIN: POSTDOWNLOAD
+[1] "Connecting to remote server"
+```
+
+> **注意**：RSelenium使用过程中需要与谷歌[API接口](www.googleapis.com)通讯。如果电脑网络不能打开谷歌网站，则会提示报错：
+
+```
+Error in open.connection(con, "rb") : Timeout was reached: [www.googleapis.com] Operation timed out after 10003 milliseconds with 0 out of 0 bytes received
+
+```
+
+## 3.4 获取机构对应的网页网址
+
+因为每一个机构的详细查询页面的网址是固定的，我们先把每一个机构的查询网址都抓取下来：
+
+```{r, eval= FALSE, echo=TRUE}
+list_ins <- list_ins$name
+#i <-2
+url <- NULL 
+name <- NULL
+#address <- NULL
+for (i in 1:length(list_ins)) {
+  
+  if (i ==i){
+    # you should set the table number to download all html for each url
+    url_list <- "https://www.qichamao.com/" 
+    # navigate the url
+    remDr$navigate(url_list)
+  
+    # wait seconds
+    Sys.sleep(1)
+  
+    # full window
+    remDr$maxWindowSize(winHand = "current")  
+  }
+  
+  
+  # search
+  xpath_search <- "//*[@id='searchForm']/div/div[2]/input[1]"
+  remDr$findElement("xpath", xpath_search)$sendKeysToElement(
+    list(list_ins[i]))
+  
+  # submit 
+  xpath_submit <- "//*[@id='searchForm']/div/div[2]/button"
+  remDr$findElement(using = "xpath", value = xpath_submit)$clickElement()
+  # wait seconds
+  Sys.sleep(1)
+  
+  # get the url href
+  css_full <-"#listsec > li:nth-child(1) > div > div > a"
+  url[i] <- remDr$findElement("css", css_full)$getElementAttribute("href") %>%
+  unlist()
+  
+  # get the institution name
+  name[i] <- remDr$findElement("css", css_full)$getElementText() %>%
+  unlist()
+  
+  # wait seconds
+  Sys.sleep(1)
+    
+  print(paste0(i, list_ins[i]))
+  
+  remDr$goBack()
+  
+}
+
+# get the out table
+tbl_out <- tibble(index=1:length(list_ins), 
+                  name_origin = list_ins,
+                  name_search = name,
+                  url=url) 
+  
+# write out csv
+write.csv(tbl_out, "data/search-from-qichmao-url.csv", row.names = F)
+
+```
+
+
+抓取网址的结果入下：
+
+```{r}
+tbl_out <-read.csv("data/search-from-qichmao-url.csv") 
+  
+tbl_out %>%
+  datatable(caption = "得到机构的网页地址信息（n=10）",
+            options = list(dom ="tip",
+                           scrollX=TRUE,
+                           autoWidth = TRUE,
+                           columnDefs = list(list(width = '200px', 
+                                                  targets = c(1 )))
+                   ))
+```
+
+
+## 3.5 获取机构的更多公开信息
+
+上一步中已经得到了全部机构信息页面的网址，所以下面只需要依次打开这些网址，然后抓取感兴趣的公开信息，然后整理和清洗数据。
+
+这些公开信息包括：法定代表人、纳税人识别号、注册资本、企业地址。例如[中国种子集团有限公司](https://www.qichamao.com/orgcompany/searchitemdtl/a98acdaca0e8b09631eb6649c36d3bda.html)。
+
+我们可以运行下面的代码：
+
+
+```{r, eval= FALSE, echo=TRUE}
+
+txt <- NULL
+for (i in 1:nrow(tbl_out)){
+  url_list <- tbl_out$url[i] 
+
+    # navigate the url
+    remDr$navigate(url_list)
+    
+    css_full <- "#M_gsjbxx > div.qd-content.mt20 > div:nth-child(1)"
+    txt[i] <- remDr$findElement("css", css_full)$getElementText() %>%
+  unlist()
+    
+    print(paste0(i, tbl_out$name_origin[i]))
+}
+
+levels_province<-c('北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江','上海','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','广西','海南','重庆','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆')
+
+pattern_list <- paste0(levels_province, collapse = "|")
+tbl_result <- tbl_out %>%
+  add_column(txt = txt) %>%
+  mutate(address = str_extract(txt, "(?<=企业地址：)(.+)(?=\n经营范围)"),
+         province = str_extract(txt, "(?<=所属地区：)(.+)(?=\n核准日期)")) %>%
+  mutate(province= str_extract(province, pattern_list))
+
+# write out file
+path_out <- paste0("data/search-from-qichmao-tot", nrow(tbl_result),".xlsx")
+write.xlsx(tbl_result , path_out)
+
+```
+
+
+抓取结果如下：
+
+```{r}
+tbl_result <- read.xlsx("data/search-from-qichmao-tot10.xlsx")
+
+tbl_result %>%
+  select(-url, -name_origin) %>%
+  datatable(caption = "自动抓取得到的机构信息（n=10）",
+            options = list(dom ="tip",
+                           scrollX=TRUE,
+                           autoWidth = TRUE))
+```
+
+
+
+
+
+
