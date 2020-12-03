@@ -63,7 +63,8 @@ n_year <- 4
 n_operation <- 5
 
 # 估算全部操作需要的时长为 小时数
-(time_total <- (n_prod*n_country *n_year *n_operation)/3600)
+(time_total <- (n_prod*n_country *n_year *n_operation)/3600/24)
+
 
 ```
 
@@ -73,6 +74,14 @@ n_operation <- 5
 
 # 文献讨论
 
+理论模型：
+
+实证模型：
+
+操作步骤和主要过程
+
+主要结论
+
 
 # 数据分析
 
@@ -80,28 +89,77 @@ n_operation <- 5
 source("d:/github/web-scrape/R/xfun-general.R")
 ```
 
+## 初步分析HS2012数据
+
+### 合并所有数据
+
+```{r}
+all_files <- list.files("data/eps/import/HS2012")
+n <- length(all_files)
+
+path_dir <- here::here("manuscript","data","eps", "import", "HS2012")
+path_file <- paste0(path_dir, "/",all_files)
+
+tbl_hs2012 <- NULL
+for (i in  1:n) {
+  tbl_tem <- read_rds(file = path_file[i])
+  tbl_hs2012 <- bind_rows(tbl_hs2012, tbl_tem)
+  print(paste0("成功合并到了第", i,"个文件。共有",n,"个文件！"))
+}
+
+# 写出文件
+write_rds(tbl_hs2012, "data/eps/tbl-hs2012.rds")
+
+# 转换数据形式
+tbl_hsclear <- tbl_hs2012 %>%
+  mutate(value = str_replace_all(value, ",", ""))  %>%
+  mutate(value = as.numeric(value))
+
+# 进行数据汇总分析
+## 按产品 按月份 加总进口额
+tbl_smry <- tbl_hsclear %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarize(total = sum(value, na.rm = T))
+
+## 分析国家进出情况
+tbl_smry <- tbl_hsclear %>%
+  ungroup() %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarise(n = dplyr::n(country))
+
+
+unique(tbl_hsclear$country)  
+
+str(tbl_hsclear)
+```
+
+
 ## 比较HS产品编码变动
 
 ```{r}
 hs_prod4d_2012 <- read_rds(file = "data/eps/list-prod-hs2012-4d.rds") %>%
-  .[1:197,] %>%
   mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
   mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
          d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
   fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
   filter(!is.na(d4)) %>%
   select(name, d2, d4) %>%
+  .[1:197,] %>%
   add_column(index = 1:nrow(.), .before = "name") 
 
 
 hs_prod4d_2002 <- read_rds(file = "data/eps/list-prod-hs2002-4d.rds") %>%
-  .[1:201,] %>%
   mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
   mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
          d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
   fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
   filter(!is.na(d4)) %>%
   select(name, d2, d4) %>%
+  .[1:201,] %>%
   add_column(index = 1:nrow(.), .before = "name") 
 
 # full join
