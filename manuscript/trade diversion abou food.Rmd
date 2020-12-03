@@ -1,0 +1,164 @@
+---
+title: "trade diversion"
+author: "xsl"
+date: "2020/11/25"
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: create-template.docx
+  bookdown::html_document2:
+    number_sections: yes
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: header.tex
+      before_body: preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document: 
+    latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: 3
+    fig_caption: yes
+bibliography: bib-paper.bib
+biblio-style: "apalike"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
+pagestyle: "headings"
+---
+```{r}
+library("knitr")
+library("rmarkdown")
+```
+
+
+# 1. 研究目标
+
+1.1 我国在美洲国家的粮食中心能否转移到"一带一路"国家上
+
+- 我国主要农产品进/出口国家和地区的趋势和关系
+
+- 能否转移（贸易流）
+
+1.2 如何转移，需要什么条件
+
+# 2. 数据来源 
+
+2.1 现有数据
+
+-中国商务部：农产品月度统计报告2002年1月-2020年3月(pdf)(具体农产品前三贸易伙伴)
+
+-中国海关(搜数网)：2000年1月-2020年5月中国与44个国家粮食产品进、出口数据
+
+-FAO
+
+-美国农业部
+
+2.2 需要数据
+
+-中国与贸易伙伴国农产品贸易月度数据
+
+# 3. 文献分析
+
+3.1 主要文献
+
+1. A. B. Bernard, J. B. Jensen, S. J. Redding和P. K. Schott, 《The Margins of US Trade》, American Economic Review, 卷 99, 期 2, 页 487–493, 4月 2009, doi: 10.1257/aer.99.2.487.
+
+2. C. Xie, J. Gao, J. H. Grant和S. Anders, 《Examining the Canada-China agri-food trade relationship: Firms, trading partners, and trading volumes》, Canadian Journal of Agricultural Economics/Revue canadienne d’agroeconomie, 卷 66, 期 4, 页 539–555, 12月 2018, doi: 10.1111/cjag.12172.
+
+3.2 文献综述
+
+
+$m_{ki}^{jk}$
+
+$\text{sum of }\sum{x^2}= $
+
+$-\sum_1^N{\frac{(a+b)^2}{2+c}}$
+
+$\cdots$
+
+$\cdot$
+
+$\hat{\beta}$
+
+$\Rightarrow$
+
+$\beta^{\ast}$
+
+$\bar{\beta}$
+
+$\tidle{}$
+
+
+# 4. 理论研究
+
+## 4.1 截面分解模型
+
+### 论文中的模型分析
+
+国际贸易中往往会存在较大的截面数据差异，例如中国从美洲国家如美国、加拿大、阿根廷等国家进口的粮食总量和总额远远大于中国从一些依赖农业贸易的小国家进口的总量和总额。
+
+因此，对于中国与其他国家的粮食贸易总额，可以在横截面上分解为国家层面、产品层面、国家-产品密度、国家-产品强度。
+
+
+随着公司和产品的数量在不同国家之间增长，可能的公司-产品观察(firm-product)的数量会成倍增加。如果企业在不同国家的产品中都是相对恒定的子集，那么观察到的具有正贸易的企业产品的实际数量将不成比例地增加，从而导致密度下降。在这种情况下,公司和产品数量越大的国家，其贸易密度就越小，这意味着密度与贸易公司数量和贸易产品数量呈负相关关系。
+
+密度系数和产品数量的回归系数的总和产生了每个公司的产品数量的百分比贡献，即以正的数量进行产品交易。
+
+```{r}
+include_graphics("pic/fig1.regression outcome.png")
+```
+
+上表报告了第t年回归截面分解的结果。对每个变量进行独立回归，结果为每个变量的系数之和为1。仅分析出口情况：第一列为对全样本的回归，第二列为交叉出口，第三列为独立出口。第一行系数为公司数量对两国贸易总量的影响程度，第二行系数为产品数量对两国贸易总量的影响程度，第三行为公司-产品密度对两国贸易总量的影响程度，第四行为公司-产品强度
+
+体系数解释为
+
+
+如第一列的最后一行所示，整体利润率解释了美国出口目的地之间22.6%的平均差异。另一方面，出口企业数量(第一行)和出口产品数量(第2行)的变化分别占变化的69.4和58.8%。如上所述，密度的负系数为-0.508(第3行)，反映了密度与美国贸易产品数量、贸易公司数量和贸易总额呈负相关。尽管如此，这三个广泛的利润条件的总和仍然占总体出口变化的绝大多数(77.4%)。
+
+
+## 4.2 时序分解模型
+
+```{r}
+include_graphics("pic/fig2.regression outcome.png")
+```
+
+```{r}
+include_graphics("pic/fig3.percentage.png")
+```
+
+## 模型修改
+
+已知：
+- t-1到t年的贸易额
+- t-1到t年的国家数
+- t-1到t年的产品数
+- 面板数据：t年贸易伙伴国固定产品的贸易额
+
+```{r}
+include_graphics("pic/fig4.png")
+include_graphics("pic/fig5.jpg")
+```
+
+
+
+
