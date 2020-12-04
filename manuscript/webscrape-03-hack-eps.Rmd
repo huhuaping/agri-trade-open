@@ -1,0 +1,234 @@
+---
+title: "EPS贸易数据分析"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2:
+    number_sections: yes
+    toc: no
+    fig_caption: yes
+    toc_float: yes
+  bookdown::word_document2:
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    reference_docx: report-reference.docx
+always_allow_html: yes
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, eval = TRUE,
+                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
+options(
+  htmltools.dir.version = FALSE, 
+  formatR.indent = 2, width = 55, 
+  digits = 2,scipen=999,tinytex.verbose = TRUE,
+  knitr.kable.NA = '',
+  fig.width=12, fig.height=8)
+
+```
+
+
+```{r}
+library("readr")
+require("rvest")
+require("stringr")
+require("tidyverse")
+require("tidyselect")
+```
+
+
+\newpage
+
+# 目前进展
+
+数据收集进展情况：
+
+1. EPS数据库。
+
+- HS2002子库（2002-2011年）：正在下载中，一天内可以完成数据下载！
+
+- HS2012子库（2012-2016年）：已经完成下载！可以进行数据分析。
+
+2. 竹云贸易数据库（2017-2020）。受到数据可系统查询设定的约束，下载工作量较大，需要较长时间。
+
+```{r, echo=TRUE}
+# HS四位编码农产品数量
+n_prod <-  197
+# 国家数（包括总值）
+n_country <- 243
+# 年份数（2017-2020年）
+n_year <- 4
+# 每次操作需要的平均秒数
+n_operation <- 5
+
+# 估算全部操作需要的时长为 小时数
+(time_total <- (n_prod*n_country *n_year *n_operation)/3600/24)
+
+
+```
+
+
+
+# 面临问题
+
+# 文献讨论
+
+理论模型：
+
+实证模型：
+
+操作步骤和主要过程
+
+主要结论
+
+
+# 数据分析
+
+```{r}
+source("d:/github/web-scrape/R/xfun-general.R")
+```
+
+## 初步分析HS2012数据
+
+### 合并所有数据
+
+```{r}
+all_files <- list.files("data/eps/import/HS2012")
+n <- length(all_files)
+
+path_dir <- here::here("manuscript","data","eps", "import", "HS2012")
+path_file <- paste0(path_dir, "/",all_files)
+
+tbl_hs2012 <- NULL
+for (i in  1:n) {
+  tbl_tem <- read_rds(file = path_file[i])
+  tbl_hs2012 <- bind_rows(tbl_hs2012, tbl_tem)
+  print(paste0("成功合并到了第", i,"个文件。共有",n,"个文件！"))
+}
+
+# 写出文件
+write_rds(tbl_hs2012, "data/eps/tbl-hs2012.rds")
+
+# 转换数据形式
+tbl_hsclear <- tbl_hs2012 %>%
+  mutate(value = str_replace_all(value, ",", ""))  %>%
+  mutate(value = as.numeric(value))
+
+# 进行数据汇总分析
+## 按产品 按月份 加总进口额
+tbl_smry <- tbl_hsclear %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarize(total = sum(value, na.rm = T))
+
+## 分析国家进出情况
+tbl_smry <- tbl_hsclear %>%
+  ungroup() %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarise(n = dplyr::n(country))
+
+
+unique(tbl_hsclear$country)  
+
+str(tbl_hsclear)
+```
+
+
+## 比较HS产品编码变动
+
+```{r}
+hs_prod4d_2012 <- read_rds(file = "data/eps/list-prod-hs2012-4d.rds") %>%
+  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
+  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
+         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
+  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
+  filter(!is.na(d4)) %>%
+  select(name, d2, d4) %>%
+  .[1:197,] %>%
+  add_column(index = 1:nrow(.), .before = "name") 
+
+
+hs_prod4d_2002 <- read_rds(file = "data/eps/list-prod-hs2002-4d.rds") %>%
+  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
+  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
+         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
+  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
+  filter(!is.na(d4)) %>%
+  select(name, d2, d4) %>%
+  .[1:201,] %>%
+  add_column(index = 1:nrow(.), .before = "name") 
+
+# full join
+tbl_compare <- full_join(hs_prod4d_2002, hs_prod4d_2012, by = "d4") %>%
+  select(d4, name.x, name.y, everything()) %>%
+  filter(is.na(index.x) | is.na(index.y))
+
+```
+
+```{r}
+DT::datatable(tbl_compare)
+```
+
+
+## 比较HS国家编码变动
+
+
+# 后续工作
+
+
+
+**任务目标**：获得海关贸易数据（月度）
+
+- [网站地址](http://htqqt.com/login/?g=gt)
+
+**技术方法**：本次任务将主要用到如下关键爬虫技术。
+
+- 技术1：`RSelenium` + `chrome`组合实现本地自动抓取。
+
+- 技术2：`ROpenCVLite` + `Rvision`解决滑块验证登录等问题。
+
+- 技术3：`magic`截图处理 + `tesseract`图片OCR处理，获取正确的验证码。
+
+# 站点分析
+
+**网站特点**：
+
+- 查询界面简单，但是不支持多并发查询。——得查询多次，分别获得查询数据。
+
+- 通过随机验证码图片来设定防爬虫机制，但是验证码比较简单（只是正常的4位数）。（我们用笨办法解决它）
+
+**注意事项**：
+
+- 计量单位：应该同时勾选“第一计量单位”和“金额”
+
+- 四位数商品编码不能并发查询，但是六位数商品编码支持并发查询
+
+- 贸易国支持并发查询
+
+**待处理工作**：
+
+1. 单次最大查询量有没有限制？
+
+2. 查询的参数列表需要提前准备好。
+
+参数列表的获取核实，具体可以参考中国海关数据查询[系统](http://43.248.49.97/)。需要的参数列表包括：
+
+- HS商品编码参数表。需要注意：不同年份的参数表可能会变化，需要核实！
+
+- 贸易伙伴参数表
+
+# 自动化抓取策略
+
+参数选择区域的处理
+
+- 勾选“分月展示”
+
+- 每次只抓取一个商品、一个国家
+
+- 如果“没有相关数据”则跳过
+
+

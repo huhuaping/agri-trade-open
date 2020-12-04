@@ -73,3 +73,15 @@ $\frac{\sqrt{a^2+b^2}}{-2}\sum_1^{n}{x^2}$
 ## 时序分解模型
 
 
+下面展示一张图片
+
+```{r, fig.cap= "缺失数据的形态"}
+
+library("knitr")
+library("rmarkdown")
+
+include_graphics("pic/missing-data.jpg")
+
+```
+
+
