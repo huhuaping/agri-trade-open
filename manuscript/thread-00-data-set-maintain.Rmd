@@ -3,82 +3,46 @@ title: "数据集维护更新"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
   bookdown::html_document2:
     number_sections: no
     toc: yes
     fig_caption:  true
     toc_float: true
-  bookdown::word_document2: 
-    fig_caption:  true
-    toc: yes
-    toc_depth: 4
-    reference_docx: tech-report-reference.docx
   bookdown::pdf_document2:
     latex_engine: xelatex
     fig_caption:  true
     includes:
-      in_header: header.tex
-      before_body: preamble.tex
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
     toc: yes
     toc_depth: 5
     number_sections: no
     keep_tex: true
-  html_document:
-    number_sections: yes
-    toc: yes
-  pdf_document: 
-    latex_engine: xelatex
-    includes:
-      in_header: header.tex
-    toc: true
-    toc_depth: 3
-    number_sections: true
-  word_document:
-    toc: true
-    toc_depth: 3
-    fig_caption: yes
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
 always_allow_html: yes
 documentclass: article
-bibliography: bib-agri-tech.bib
-biblio-style: "apalike"
-link-citations: true
 classoption: [(landscape,a4paper),(portrait,a4paper)]
 fontsize: "12pt"
-thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
 pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'thread-00-data-set-maintain.docx')) })
 ---
 
+
 ```{r global_options, echo=F,message=FALSE,warning=F}
-knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,
-                      fig.align='center',fig.width=10, fig.height=7) # Places figures on their own pages
-options(
-  htmltools.dir.version = FALSE, 
-  formatR.indent = 2, width = 55, 
-  digits = 2,scipen=999,tinytex.verbose = TRUE,
-  knitr.kable.NA = '',
-  fig.width=12, fig.height=8)
-library('bookdown')
-library('knitr')
-library('xlsx')
-library("openxlsx")
-#install.packages('tidyr')
-#install.packages('plyr')
-library('tidyr')
-library('dplyr')
-library('stringr')
-library('tidyverse')
-library('ggplot2')
-library("scales")
-#install.packages("gridExtra")
-library("gridExtra")
-#install.packages("magrittr")
-library("magrittr")
-#install.packages("ggthemes")
-#install.packages("ggrepel")
-require("ggthemes")
-require("ggrepel")
-require("lubridate")
-#require(kableExtra)
+source("../R/set-global.R")
 ```
 
 # 体系框架
