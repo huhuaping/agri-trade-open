@@ -2,22 +2,50 @@
 title: "数据库管理规则"
 author: "胡华平"
 date: "`r Sys.Date()`"
-output:
-  bookdown::word_document2:
-    fig_caption: yes
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
     toc: yes
-    toc_depth: 4
-    reference_docx: report-reference.docx
-
+    number_sections: no
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'thread-00-data-base-rules.docx')) })
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-require("rvest")
-require("stringr")
-require("tidyverse")
-require("tidyselect")
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source("../R/set-global.R")
 ```
+
+
 
 \newpage
 

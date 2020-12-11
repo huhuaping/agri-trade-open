@@ -1,0 +1,243 @@
+---
+title: "EPS贸易数据分析"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template-wide.docx
+    toc: yes
+    number_sections: no
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'analysis-01-eps-case.docx')) })
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source(here::here("R","set-global.R"))
+
+source("../R/xfun-general.R")
+```
+
+
+
+
+
+\newpage
+
+# 目前进展
+
+数据收集进展情况：
+
+1. EPS数据库。
+
+- HS2002子库（2002-2011年）：正在下载中，一天内可以完成数据下载！
+
+- HS2012子库（2012-2016年）：已经完成下载！可以进行数据分析。
+
+2. 竹云贸易数据库（2017-2020）。受到数据可系统查询设定的约束，下载工作量较大，需要较长时间。
+
+```{r, echo=TRUE}
+# HS四位编码农产品数量
+n_prod <-  197
+# 国家数（包括总值）
+n_country <- 243
+# 年份数（2017-2020年）
+n_year <- 4
+# 每次操作需要的平均秒数
+n_operation <- 5
+
+# 估算全部操作需要的时长为 小时数
+(time_total <- (n_prod*n_country *n_year *n_operation)/3600/24)
+
+
+```
+
+
+
+# 面临问题
+
+# 文献讨论
+
+理论模型：
+
+实证模型：
+
+操作步骤和主要过程
+
+主要结论
+
+
+# 数据分析
+
+
+## 比较HS国家编码变动
+
+
+## 合并HS2012数据
+
+下面合并操作只需要运行一次即可。
+
+```{r, eval=FALSE, echo= TRUE}
+all_files <- list.files("../data/eps/import/HS2012")
+n <- length(all_files)
+
+path_dir <- here::here("manuscript","data","eps", "import", "HS2012")
+path_file <- paste0(path_dir, "/",all_files)
+
+tbl_hs2012 <- NULL
+for (i in  1:n) {
+  tbl_tem <- read_rds(file = path_file[i])
+  tbl_hs2012 <- bind_rows(tbl_hs2012, tbl_tem)
+  print(paste0("成功合并到了第", i,"个文件。共有",n,"个文件！"))
+}
+
+# 写出文件
+write_rds(tbl_hs2012, "../data/eps/tbl-hs2012.rds")
+
+```
+
+## 比较HS产品编码变动
+
+```{r, eval= FALSE}
+hs_prod4d_2012 <- readr::read_rds(file = "../data/eps/list-prod-hs2012-4d.rds") %>%
+  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
+  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
+         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
+  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
+  filter(!is.na(d4)) %>%
+  select(name, d2, d4) %>%
+  .[1:197,] %>%
+  add_column(index = 1:nrow(.), .before = "name") 
+
+
+hs_prod4d_2002 <- read_rds(file = "../data/eps/list-prod-hs2002-4d.rds") %>%
+  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
+  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
+         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
+  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
+  filter(!is.na(d4)) %>%
+  select(name, d2, d4) %>%
+  .[1:201,] %>%
+  add_column(index = 1:nrow(.), .before = "name") 
+
+# full join
+tbl_compare <- full_join(hs_prod4d_2002, hs_prod4d_2012, by = "d4") %>%
+  select(d4, name.x, name.y, everything()) %>%
+  filter(is.na(index.x) | is.na(index.y))
+
+```
+
+## HS2012数据描述性分析
+
+读取已经合并好的数据，并进行简单清洗：
+
+```{r}
+# 读取数据
+tbl_hs2012 <- read_rds("../data/eps/tbl-hs2012.rds")
+
+# 转换数据形式
+tbl_hsclear <- tbl_hs2012 %>%
+  mutate(value = str_replace_all(value, ",", ""))  %>%
+  mutate(value = as.numeric(value)) %>%
+  filter(str_detect(var, "美元"))
+```
+
+
+下面我们进行初步的数据汇总分析。
+
+1.按产品和按月份，来统计加总进口额情况
+
+```{r}
+## 按产品 按月份 加总进口额
+tbl_smry <- tbl_hsclear %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarize(total = sum(value, na.rm = T))
+```
+
+这是一张表
+
+```{r tab-smry}
+# 处理一下数据
+tbl_show <- tbl_smry  %>%
+  filter(code_prod =="1001") %>%
+  mutate(total = 0.0001 *total) %>%
+  arrange(desc(total))
+
+# 出表啦
+tbl_show  %>%
+  knitr::kable(caption = "2012年1001产品分月进口总额")
+```
+
+下面我们来做一张柱状图：
+
+```{r chart-bar, fig.cap="一张丑丑的柱状图"}
+#出图啦
+# hadley 
+tbl_show %>%
+  ggplot(data = ., aes(x = month, y = total )) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "月份", y = "进口额合计(万美元)")
+
+```
+
+上面的表\@ref(tab:tab-smry) 和图\@ref(fig:chart-bar) 共同表明，分月合计的产品进口贸易额呈现一定的双峰分布形态。
+
+这是另外一张表。它表明什么社么
+
+```{r}
+tbl_smry  %>%
+  group_by(month) %>%
+  summarise(sum_pro = sum(total)) %>%
+  arrange(desc(sum_pro)) %>%
+  knitr::kable(caption = "2012年所有产品分月进口总额")
+```
+
+
+
+
+分析国家进出情况（有问题，未完成）。
+
+```{r, eval=FALSE, echo=TRUE}
+tbl_smry <- tbl_hsclear %>%
+  ungroup() %>%
+  filter(year=="2012") %>%
+  filter(country !="总值") %>%
+  group_by(code_prod, month) %>%
+  summarise(n = dplyr::n(country))
+```
+
+
+
+
+
+

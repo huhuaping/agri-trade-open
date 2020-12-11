@@ -1,0 +1,99 @@
+---
+title: "贸易数据的截面数据分析"
+author: "组会团队"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'analysis-02-cross-section.docx')) })
+---
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source("../R/set-global.R")
+```
+
+# 目前进展
+
+已将2012年1月，2月数据带入模型，得出变动环比，贸易密度等指标。
+
+# 面临问题
+
+用R处理数据，之前的工作大多是由excel完成，rds文件与xlsx文件如何高效转换，如何用R直接进行数据处理。
+
+# 下一步思路
+
+以更高效的方式处理数据，对有问题的数据进行进一步清洗；将已得到的数据和指标结论化，得出与研究目标接近的结论并进一步完善模型。
+
+
+# 数据分析
+
+单一的4位数hs码产品数据量少，得出的结论过于单薄。经胡老师提示后将hs4位数码的产品做一个集合，合并得出数据指标。
+
+
+
+## 百分比变动分析
+
+$\frac{|a|}{(|a|+|b|)}*100\%$
+
+$\frac{|b|}{(|a|+|b|)}*100\%$
+
+
+## 密度分析
+
+贸易额的绝对值除以国家数，单位为美元/每国家
+
+```{r}
+
+```
+
+## 具体步骤
+
+### 数据和变量说明
+
+Y  x
+
+分析现有数据和需要得到的指标,设计表格。
+
+我们的数据是2002年到2016年的月度数据，是按产品hs码进行编制的，中国各月份进口各国和地区的该产品的数量和金额。我们需要的数据是产品编码下的贸易额，基期与报告期的变动值，以及各国各地区分月份的变动情况。由此编制表-谷物时间序列表1.
+
+用RStudio打开HS四位数1001-1008的rds文件，将数据抄录在设计好的表格中。为方便后续处理，可将2012年1月到12月的数据全部录入，后期可以进行时间序列和截面数据分析。接着按各国贸易量的变动情况，以模型为依据进行分解，分为相对于基期是新进入国、退出国、存续国。又将存续国带来的贸易量变动按正负分为两个方向。对各变动量进行加总，看是否与总变动一致，验证一致。由此得到表-谷物时间序列2.
+
+将1月到2月的贸易额变动做截面分析，用上述的变动环比和贸易密度作为指标，编制谷物截面表。
+
+将1001-1008的产品进行汇总，编制表hs1001-1008(1002无研究
+
+
+进入国家分类，一带一路国家，非一带一路国家
+
