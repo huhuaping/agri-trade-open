@@ -1,0 +1,85 @@
+---
+title: "贸易流分解模型的理论分析"
+author: "胡华平"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/agri-trade.bib
+biblio-style: "../bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'paper-01-trade-theory.docx')) })
+---
+
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source(here::here("R","set-global.R"))
+
+
+```
+
+
+# 研究目标
+
+# 文献分析
+
+## 截面分解模型
+
+$Y= \beta_0 +\beta_1X_1 + \beta_2 X_2$
+
+$\frac{\sqrt{a^2+b^2}}{-2}\sum_1^{n}{x^2}$
+
+1. 理论来源
+
+2. 数理模型
+
+3. 公式分解
+
+> 爱因斯坦怎么说。
+
+## 时序分解模型
+
+[@li2018]
+
+bernard （@bernard2009）
+
+下面展示一张图片
+
+```{r, fig.cap= "缺失数据的形态", fig.align="l",fig.height=5}
+knitr::include_graphics(here::here("pic","missing-data.jpg"))
+
+```
+
+
+# 参考文献
+
+第一步：打开github[首页](www.github.com) ; $\Rightarrow$输入用户名![帅图](../pic/fig4.png)。的发掘大家是否了解的地方。

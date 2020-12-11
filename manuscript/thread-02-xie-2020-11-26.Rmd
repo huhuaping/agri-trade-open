@@ -1,13 +1,15 @@
 ---
-title: "trade diversion"
-author: "xsl"
-date: "2020/11/25"
+title: "贸易变动的驱动因素"
+author: "组会团队"
+date: "`r Sys.Date()`"
 output: 
   bookdown::word_document2: 
     fig_caption:  true
-    reference_docx: create-template.docx
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
   bookdown::html_document2:
-    number_sections: yes
+    number_sections: no
     toc: yes
     fig_caption:  true
     toc_float: true
@@ -15,39 +17,32 @@ output:
     latex_engine: xelatex
     fig_caption:  true
     includes:
-      in_header: header.tex
-      before_body: preamble.tex
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
     toc: yes
     toc_depth: 5
     number_sections: no
     keep_tex: true
-  html_document:
-    number_sections: yes
-    toc: yes
-  pdf_document: 
-    latex_engine: xelatex
-    includes:
-      in_header: header.tex
-    toc: true
-    toc_depth: 3
-    number_sections: true
-  word_document:
-    toc: true
-    toc_depth: 3
-    fig_caption: yes
-bibliography: bib-paper.bib
-biblio-style: "apalike"
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
 link-citations: true
 always_allow_html: yes
 documentclass: article
 classoption: [(landscape,a4paper),(portrait,a4paper)]
 fontsize: "12pt"
-thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
 pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'thread-02-xie-2020-11.docx')) })
+                        
 ---
-```{r}
-library("knitr")
-library("rmarkdown")
+
+```{r global_options, echo=F,message=FALSE,warning=F}
+source("../R/set-global.R")
 ```
 
 
@@ -125,7 +120,7 @@ $\tidle{}$
 密度系数和产品数量的回归系数的总和产生了每个公司的产品数量的百分比贡献，即以正的数量进行产品交易。
 
 ```{r}
-include_graphics("pic/fig1.regression outcome.png")
+include_graphics("../pic/fig1.regression outcome.png")
 ```
 
 上表报告了第t年回归截面分解的结果。对每个变量进行独立回归，结果为每个变量的系数之和为1。仅分析出口情况：第一列为对全样本的回归，第二列为交叉出口，第三列为独立出口。第一行系数为公司数量对两国贸易总量的影响程度，第二行系数为产品数量对两国贸易总量的影响程度，第三行为公司-产品密度对两国贸易总量的影响程度，第四行为公司-产品强度
@@ -139,11 +134,11 @@ include_graphics("pic/fig1.regression outcome.png")
 ## 4.2 时序分解模型
 
 ```{r}
-include_graphics("pic/fig2.regression outcome.png")
+include_graphics("../pic/fig2.regression outcome.png")
 ```
 
 ```{r}
-include_graphics("pic/fig3.percentage.png")
+include_graphics("../pic/fig3.percentage.png")
 ```
 
 ## 模型修改
@@ -155,8 +150,8 @@ include_graphics("pic/fig3.percentage.png")
 - 面板数据：t年贸易伙伴国固定产品的贸易额
 
 ```{r}
-include_graphics("pic/fig4.png")
-include_graphics("pic/fig5.jpg")
+include_graphics("../pic/fig4.png")
+include_graphics("../pic/fig5.jpg")
 ```
 
 

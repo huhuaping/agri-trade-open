@@ -3,52 +3,46 @@ title: "rmarkdown下的自动化文献管理和引用"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
   bookdown::html_document2:
-    number_sections: yes
+    number_sections: no
     toc: yes
     fig_caption:  true
     toc_float: true
-  bookdown::word_document2: 
-    fig_caption:  true
-    reference_docx: create-template.docx
   bookdown::pdf_document2:
     latex_engine: xelatex
     fig_caption:  true
     includes:
-      in_header: header.tex
-      before_body: preamble.tex
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
     toc: yes
     toc_depth: 5
     number_sections: no
     keep_tex: true
-  html_document:
-    number_sections: yes
-    toc: yes
-  pdf_document: 
-    latex_engine: xelatex
-    includes:
-      in_header: header.tex
-    toc: true
-    toc_depth: 3
-    number_sections: true
-  word_document:
-    toc: true
-    toc_depth: 3
-    fig_caption: yes
-bibliography: bib-paper.bib
-biblio-style: "apalike"
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
 link-citations: true
 always_allow_html: yes
 documentclass: article
 classoption: [(landscape,a4paper),(portrait,a4paper)]
 fontsize: "12pt"
-thanks: "感谢经济管理学院数量经济学教研室同仁的大力支持！"
 pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'demo-02-zetero-with-citer.docx')) })
 ---
 
 
 ```{r global_options, echo=F,message=FALSE,warning=F}
-source("../R/set-global-only.R")
+source("../R/set-global.R")
 ```
 
 
@@ -154,8 +148,6 @@ Rmarkdown写作环境下，Zotero + `rbbt`的方式，基本上实现了比较�
 3. 因为文献条目中可能包含了abstract等长文本域，为了避免Zotero导出.bib后，R包citr识别报错的问题。最好把Zotero 软件的Better Bibtex（插件菜单）做出如下导出设定。
 
     - 设定导出规则：打开Zotero$\Rightarrow$ 编辑$\Rightarrow$ 首选项$\Rightarrow$ Better Bibtex（插件菜单）$\Rightarrow$ Export$\Rightarrow$ Fields$\Rightarrow$  Fields to omit frome export$\Rightarrow$ 输入abstract等（逗号分隔）
-
-
 
 
 

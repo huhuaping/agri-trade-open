@@ -2,24 +2,47 @@
 title: "爬虫技术RSelenium + Firefox：机构代码自动化查询"
 author: "胡华平"
 date: "`r Sys.Date()`"
-output:
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: yes
+    number_sections: no
   bookdown::html_document2:
     number_sections: no
-    toc: no
-    fig_caption: yes
-    toc_float: yes
-  bookdown::word_document2:
-    fig_caption: yes
     toc: yes
-    toc_depth: 4
-    reference_docx: create-template.docx
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
 always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'webscrape-01-hack-institution.html')) })
 ---
 
-```{r, echo=FALSE}
+```{r global_options, echo=F,message=FALSE,warning=F}
 # read R script to set the global options
 source("../R/set-global.R")
-
 # read R script for checking packages 
 source("../R/check.pkg.R")
 
@@ -106,7 +129,7 @@ check.packages(packages)
 
 ```{r, echo = TRUE}
 # get the unique institution name
-list_ins <-  read.csv("data/tbl-list.csv")
+list_ins <-  read.csv(here::here("data","tbl-list.csv"))
 
 list_ins %>%
   datatable(caption = "待查询的机构名单（n=10）") 
@@ -218,7 +241,7 @@ tbl_out <- tibble(index=1:length(list_ins),
                   url=url) 
   
 # write out csv
-write.csv(tbl_out, "data/search-from-qichmao-url.csv", row.names = F)
+write.csv(tbl_out, "../data/search-from-qichmao-url.csv", row.names = F)
 
 ```
 
@@ -226,7 +249,7 @@ write.csv(tbl_out, "data/search-from-qichmao-url.csv", row.names = F)
 抓取网址的结果入下：
 
 ```{r}
-tbl_out <-read.csv("data/search-from-qichmao-url.csv") 
+tbl_out <-read.csv("../data/search-from-qichmao-url.csv") 
   
 tbl_out %>%
   datatable(caption = "得到机构的网页地址信息（n=10）",
@@ -283,7 +306,7 @@ write.xlsx(tbl_result , path_out)
 抓取结果如下：
 
 ```{r}
-tbl_result <- read.xlsx("data/search-from-qichmao-tot10.xlsx")
+tbl_result <- read.xlsx("../data/search-from-qichmao-tot10.xlsx")
 
 tbl_result %>%
   select(-url, -name_origin) %>%

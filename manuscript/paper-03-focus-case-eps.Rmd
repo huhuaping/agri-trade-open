@@ -1,11 +1,11 @@
 ---
-title: "机构代码自动查询"
+title: "EPS贸易数据分析"
 author: "胡华平"
 date: "`r Sys.Date()`"
 output: 
   bookdown::word_document2: 
     fig_caption:  true
-    reference_docx: ../template/create-template.docx
+    reference_docx: ../template/create-template-wide.docx
     toc: yes
     number_sections: no
   bookdown::html_document2:
@@ -37,12 +37,15 @@ knit: (function(inputFile, encoding) {
       out_dir <- '../public';
       rmarkdown::render(inputFile,
                         encoding=encoding, 
-                        output_file=file.path(dirname(inputFile), out_dir, 'webscrape-01-hack-validation-image.html')) })
+                        output_file=file.path(dirname(inputFile), out_dir, 'paper-03-focus-case-eps.docx')) })
+---                        
                         
----
 
-```{r global_options, echo=F,message=FALSE,warning=F}
+```{r out-source, warning=FALSE, message=FALSE, echo=FALSE}
 source("../R/set-global.R")
+
+num_fig <- 0
+num_tab <- 0
 
 ```
 
@@ -50,7 +53,54 @@ source("../R/set-global.R")
 
 \newpage
 
-# 任务概况
+# 目前进展
+
+数据收集进展情况：
+
+1. EPS数据库。
+
+- HS2002子库（2002-2011年）：正在下载中，一天内可以完成数据下载！
+
+- HS2012子库（2012-2016年）：已经完成下载！可以进行数据分析。
+
+2. 竹云贸易数据库（2017-2020）。受到数据可系统查询设定的约束，下载工作量较大，需要较长时间。
+
+```{r, echo=TRUE}
+# HS四位编码农产品数量
+n_prod <-  197
+# 国家数（包括总值）
+n_country <- 243
+# 年份数（2017-2020年）
+n_year <- 4
+# 每次操作需要的平均秒数
+n_operation <- 5
+
+# 估算全部操作需要的时长为 小时数
+(time_total <- (n_prod*n_country *n_year *n_operation)/3600/24)
+
+
+```
+
+
+
+# 面临问题
+
+# 文献讨论
+
+理论模型：
+
+实证模型：
+
+操作步骤和主要过程
+
+主要结论
+
+
+
+
+# 后续工作
+
+
 
 **任务目标**：获得海关贸易数据（月度）
 
