@@ -37,7 +37,7 @@ options(servr.interval = 0.5) # control time to refresh the preview
 options(servr.daemon = TRUE) # unlock thread when infinite moon render
 
 # load useful pkgs
-
+require("knitr")
 library("readr")
 require("rvest")
 require("stringr")

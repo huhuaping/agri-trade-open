@@ -43,7 +43,7 @@ knit: (function(inputFile, encoding) {
 ```{r global_options, echo=F,message=FALSE,warning=F}
 source(here::here("R","set-global.R"))
 
-source("../R/xfun-general.R")
+source(here::here("R","xfun-general.R"))
 ```
 
 
