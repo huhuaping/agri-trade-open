@@ -1,0 +1,70 @@
+---
+title: "Git技术篇1：向github推送本地仓库"
+author: "hawkingwu"
+date: "2020/11/29"
+output: 
+  bookdown::word_document2: 
+    fig_caption:  true
+    reference_docx: ../template/create-template.docx
+    toc: no
+    number_sections: no
+  bookdown::html_document2:
+    number_sections: no
+    toc: yes
+    fig_caption:  true
+    toc_float: true
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_caption:  true
+    includes:
+      in_header: ../latex/header.tex
+      before_body: ../latex/preamble.tex
+    toc: yes
+    toc_depth: 5
+    number_sections: no
+    keep_tex: true
+bibliography: 
+  - ../bib/sco.bib
+biblio-style: "bib/nnsfc.csl"
+csl: "../bib/nnsfc.csl"
+link-citations: true
+always_allow_html: yes
+documentclass: article
+classoption: [(landscape,a4paper),(portrait,a4paper)]
+fontsize: "12pt"
+pagestyle: "headings"
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../public';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), out_dir, 'demo-03-add-file-github.docx')) })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 将本地项目、代码添加到github上
+
+> github一个面向开源及私有软件项目的托管平台，是每个程序员必须要掌握的，本文对将本地项目或者代码添加到Github上步骤进行了整理，方便自己查阅，希望对小伙伴有所帮助！
+
+1. 在github上创建一个新仓库
+
+2. 打开`git bash`
+
+3. 在`git bash`中克隆新建仓库到本地 （例：`git clone git@github.com:XXXX/File_Name.git`）
+
+4. 将要上传的本地文件夹拷贝到新克隆下来的文件夹中
+
+5. 在`git bash`中进入克隆下来的文件夹中（例：`cd /Desk_Name/Your_file_Name`）
+
+6. `git add` . 这一步是将本地文件添加到本地缓存区 **注意空格**
+
+7. `git commit -am “注释”`  引号里面的注释是对这次提交的内容做的注释，方便以后看
+
+8. `git push -u origin master`  将本地缓存仓库的文件推送到远程，也就是GitHub仓库
+
+> 以后重复5、6、7、8步骤即可推送本地文件到远程
+
+
+
