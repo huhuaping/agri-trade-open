@@ -1,6 +1,6 @@
 ---
 title: "EPS贸易数据分析"
-author: "胡华平"
+author: "胡华平; 向树林"
 date: "`r Sys.Date()`"
 output: 
   bookdown::word_document2: 
@@ -37,7 +37,7 @@ knit: (function(inputFile, encoding) {
       out_dir <- '../public';
       rmarkdown::render(inputFile,
                         encoding=encoding, 
-                        output_file=file.path(dirname(inputFile), out_dir, 'analysis-01-eps-case.docx')) })
+                        output_file=file.path(dirname(inputFile), out_dir, 'analysis-03-eps-data-prepare.docx')) })
 ---
 
 ```{r global_options, echo=F,message=FALSE,warning=F}
@@ -52,120 +52,75 @@ source(here::here("R","xfun-general.R"))
 
 \newpage
 
-# 目前进展
-
-数据收集进展情况：
-
-1. EPS数据库。
-
-- HS2002子库（2002-2011年）：正在下载中，一天内可以完成数据下载！
-
-- HS2012子库（2012-2016年）：已经完成下载！可以进行数据分析。
-
-2. 竹云贸易数据库（2017-2020）。受到数据可系统查询设定的约束，下载工作量较大，需要较长时间。
-
-```{r, echo=TRUE}
-# HS四位编码农产品数量
-n_prod <-  197
-# 国家数（包括总值）
-n_country <- 243
-# 年份数（2017-2020年）
-n_year <- 4
-# 每次操作需要的平均秒数
-n_operation <- 5
-
-# 估算全部操作需要的时长为 小时数
-(time_total <- (n_prod*n_country *n_year *n_operation)/3600/24)
+# 1. 讨论要点
 
 
+
+## 1.1 目前进展
+
+本次讨论
+
+1). 要达到的**目标**：完整地得到**分析数据集**（`dataset for analysis`），为实证分析做好准备！
+
+```{definition, echo=T,name = "分析数据Dataset for Analysis"}
+
+当明确好理论模型（实证模型）后，我们往往需要对原始数据进行清洗、整理、计算、变换等数据操作，从而得到一份马上可以进行实证建模的**数据集**，我们称之为**分析数据集**（`dataset for analysis`）。
+  
 ```
 
 
 
-# 面临问题
-
-# 文献讨论
-
-理论模型：
-
-实证模型：
-
-操作步骤和主要过程
-
-主要结论
 
 
-# 数据分析
+2). 已经完成的**工作**：
+
+    - 工作进展1：进一步清洗数据
+    - 工作进展2：得到分析数据表
+    
+    
+
+## 1.2 文献讨论
+
+暂无
+
+## 1.3 面临问题
+
+讨论提出：
+
+1. 两位数和四位数产品代码的抉择问题。因为跟我们的研究目标有关系。
+
+2. 一带一路政策的冲击，没有说清楚。
+
+## 1.4 下一步工作
+
+清单如下：
+
+1. `Rmd`使用技巧，进行总结。
+
+2. `git`操作`demo`要进一步完善。
+
+3. 文章写作，实证分析。分样本比较（一带一路国家 VS 非一带一路国家）
 
 
-## 比较HS国家编码变动
+
+\newpage
+
+# 2. 工作进展1：进一步清洗数据
 
 
-## 合并HS2012数据
-
-下面合并操作只需要运行一次即可。
-
-```{r, eval=FALSE, echo= TRUE}
-all_files <- list.files(here("data/eps/import/HS2012"))
-n <- length(all_files)
-
-path_dir <- here::here("manuscript","data","eps", "import", "HS2012")
-path_file <- paste0(path_dir, "/",all_files)
-
-tbl_hs2012 <- NULL
-for (i in  1:n) {
-  tbl_tem <- read_rds(file = path_file[i])
-  tbl_hs2012 <- bind_rows(tbl_hs2012, tbl_tem)
-  print(paste0("成功合并到了第", i,"个文件。共有",n,"个文件！"))
-}
-
-# 写出文件
-write_rds(tbl_hs2012, "../data/eps/tbl-hs2012.rds")
-
-```
-
-## 比较HS产品编码变动
-
-```{r, eval= FALSE}
-hs_prod4d_2012 <- readr::read_rds(file = "../data/eps/list-prod-hs2012-4d.rds") %>%
-  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
-  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
-         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
-  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
-  filter(!is.na(d4)) %>%
-  select(name, d2, d4) %>%
-  .[1:197,] %>%
-  add_column(index = 1:nrow(.), .before = "name") 
-
-
-hs_prod4d_2002 <- read_rds(file = "../data/eps/list-prod-hs2002-4d.rds") %>%
-  mutate(code_full = str_extract(name, "(\\d{1,4})(?= - )")) %>%
-  mutate(d2 = ifelse(str_length(code_full)==2, code_full, ""),
-         d4 = ifelse(str_length(code_full)==4, code_full, NA))  %>%
-  fill.tblcell(col = "d2") %>%  # fill same value after exist upper cell 
-  filter(!is.na(d4)) %>%
-  select(name, d2, d4) %>%
-  .[1:201,] %>%
-  add_column(index = 1:nrow(.), .before = "name") 
-
-# full join
-tbl_compare <- full_join(hs_prod4d_2002, hs_prod4d_2012, by = "d4") %>%
-  select(d4, name.x, name.y, everything()) %>%
-  filter(is.na(index.x) | is.na(index.y))
-
-```
-
-## HS2012数据描述性分析
-
-读取已经合并好的数据，并进行简单清洗，具体包括：
+读取已经合并好的数据，并进一步清洗，具体包括：
 
 - 去掉原数据中的**千分位分隔符**（逗号`,`）。
-- 正确变换列类型，例如列`value`（贸易额）的类型应该为`number`（数值型）。
-- 变换数值单位。例如列`value`（贸易额）的单位由**美元**变换为**万美元**。
-- 筛除不必要的数据行。例如，删除所有**贸易量**行（用不到），以及**贸易额**的无数据行（因为没有产生贸易活动）。
-- 加入**国家**的编码等信息。需要用到`tbl_nation`的数据表，先处理好匹配需要的`key`，然后使用`left_jion()`函数进行匹配。
-- 删除重复行，例如产品`0909`就存在重复情形（原因可能来自于最开始的数据抓取环节）
 
+- 正确变换列类型，例如列`value`（贸易额）的类型应该为`number`（数值型）。
+
+- 变换数值单位。例如列`value`（贸易额）的单位由**美元**变换为**万美元**。
+
+- 筛除不必要的数据行。例如，删除所有**贸易量**行（用不到），以及**贸易额**的无数据行（因为没有产生贸易活动）。
+
+- 加入**国家**的编码等信息。需要用到`tbl_nation`的数据表，先处理好匹配需要的`key`，然后使用`left_jion()`函数进行匹配。
+
+- 删除重复行，例如产品`0909`就存在重复情形（原因可能来自于最开始的数据抓取环节）
 
 
 ```{r, echo=TRUE}
@@ -181,7 +136,7 @@ tbl_nation <- read_rds("../data/eps/list-nation-hs2012.rds") %>%
 tbl_hsclear <- tbl_hs2012 %>%
   mutate(value = str_replace_all(value, ",", ""))  %>%
   mutate(value = as.numeric(value),
-         value = 0.001*value) %>%
+         value = 0.0001*value) %>%
   filter(str_detect(var, "美元"), !is.na(value))  %>%
   left_join(., tbl_nation, by = "country")%>%
   arrange(code_prod, year,month, country_id) %>%
@@ -192,85 +147,20 @@ tbl_hsclear <- tbl_hs2012 %>%
 #str(tbl_hsclear)
 ```
 
-
-下面我们进行初步的数据汇总分析。
-
-1.按产品和按月份，来统计加总进口额情况
-
-```{r}
-## 按产品 按月份 加总进口额
-tbl_smry <- tbl_hsclear %>%
-  filter(year=="2012") %>%
-  filter(country !="总值") %>%
-  group_by(code_prod, month) %>%
-  summarize(total = sum(value, na.rm = T))
-```
-
-这是一张表
-
-```{r tab-smry}
-# 处理一下数据
-tbl_show <- tbl_smry  %>%
-  filter(code_prod =="1001") %>%
-  mutate(total = 0.0001 *total) %>%
-  arrange(desc(total))
-
-# 出表啦
-tbl_show  %>%
-  knitr::kable(caption = "2012年1001产品分月进口总额")
-```
-
-下面我们来做一张柱状图：
-
-```{r chart-bar, fig.cap="一张丑丑的柱状图"}
-#出图啦
-# hadley 
-tbl_show %>%
-  ggplot(data = ., aes(x = month, y = total )) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(x = "月份", y = "进口额合计(万美元)")
-
-```
-
-上面的表\@ref(tab:tab-smry) 和图\@ref(fig:chart-bar) 共同表明，分月合计的产品进口贸易额呈现一定的双峰分布形态。
-
-这是另外一张表。它表明什么社么
-
-```{r}
-tbl_smry  %>%
-  group_by(month) %>%
-  summarise(sum_pro = sum(total)) %>%
-  arrange(desc(sum_pro)) %>%
-  knitr::kable(caption = "2012年所有产品分月进口总额")
-```
+\newpage
 
 
+# 3. 工作进展2：得到分析数据表
 
+## 3.1 计算得到贸易总额及其月度变动数据
 
-分析国家进出情况（有问题，未完成）。
-
-```{r, eval=FALSE, echo=TRUE}
-tbl_smry <- tbl_hsclear %>%
-  ungroup() %>%
-  filter(year=="2012") %>%
-  filter(country !="总值") %>%
-  group_by(code_prod, month) %>%
-  summarise(n = dplyr::n(country))
-```
-
-
-
-# 得到分析数据表
-
-## 贸易总额及其月度变动
-
-### 理论表达
+### 3.1.1 理论表达
 
 $X_{l0}$表示**分产品每个月**的加总贸易额，$X_{l1}$表示滞后1期变量。
 
-$\Delta X= X_{l0} -X_{l1}$表示**分产品**下的**月度贸易变动额**。
+$\Delta X= X_{l0}-X_{l1}$表示**分产品**下的**月度贸易变动额**。
 
-### 代码操作
+### 3.1.2 代码操作
 
 **具体思路**如下：
 
@@ -294,7 +184,7 @@ xc <- tbl_hsclear %>%
 
 ```
 
-### 过程解释
+### 3.1.3 过程解释
 
 下面表\@ref(tab:trade-value)简单展示了得到的数据表结果：
 
@@ -313,9 +203,9 @@ xc %>%
 
 
 
-## 贸易变动分解
+## 3.2 计算得到贸易变动分解数据表
 
-### 理论表达
+### 3.2.1 理论表达
 
 $$\begin{equation}
 \Delta X_{t}=\sum_{c \in N} X_{c t}-\sum_{c \in E} X_{c t-1}+\sum_{c \in C} \Delta X_{c t}
@@ -354,7 +244,7 @@ c. 继续留存下业务量**增长**情形(`Growth`)：贸易变动($V_g$)、�
 
 d. 继续留存下业务量**缩减**情形(`Shrink`)：贸易变动($V_s$)、国家名单$C_s$、国家数量$N_s$，贸易密度$D_s$。
 
-### 代码操作
+### 3.2.2 代码操作
 
 **基本思路**：
 
@@ -492,9 +382,9 @@ write_rds(tbl_ne, here("data/eps/tbl-compare-newcoming-exit-02-unnest.rds"))
 ```
 
 
-### 过程解释
+### 3.2.3 过程解释
 
-#### 最开始的数据集
+#### （1）最开始的数据集
 
 首先，下表\@ref(tab:trade-value-1005)给出了最开始清洗好的数据集`tbl_hsclear`，为了演示方便，我们选择**HS编码**为`1005`的农产品（玉米），年月范围为`2012/01-2020/03`
 
@@ -506,10 +396,10 @@ tbl_show <-  tbl_hsclear %>%
   filter(year ==2012, month %in% c("01", "02", "03"),
          code_prod =="1005")
 tbl_show %>%
-  kable(align = "c", caption = "2012/01-2020/03期间玉米产品月度贸易数据（单位：万美元）")
+  kable(align = "c", caption = "步骤1 2012/01-2020/03期间玉米产品月度贸易数据（单位：万美元）")
 ```
 
-#### 分年月按产品“折叠”后的数据集
+#### （2）分年月按产品“折叠”后的数据集
 
 简要信息如下：
 
@@ -521,14 +411,14 @@ tbl_compare <- read_rds(here("data/eps/tbl-compare-newcoming-exit-01-raw.rds"))
 
 分年月按产品“折叠”后的数据集，详细的数据集形态见图\@ref(fig:trade-compare-1005)
 
-```{r trade-compare-1005, fig.cap="步骤2：数据“折叠”及形态关系"}
+```{r trade-compare-1005, fig.cap="步骤2 数据“折叠”及形态关系"}
 include_graphics(here("pic/eps/tbl-compare.png"))
 ```
 
 
 
 
-#### 进行月度比较得到的变动分解数据集
+#### （3）进行月度比较得到的变动分解数据集
 
 首先，我们需要：
 
@@ -536,7 +426,7 @@ include_graphics(here("pic/eps/tbl-compare.png"))
 - 去掉分组属性`ungroup()`
 - 将`0`全部替换为`NA`。具体需要用到`dplyr::na_if()`函数
 
-```{r }
+```{r , echo=T}
 tbl_ne <- read_rds(here("data/eps/tbl-compare-newcoming-exit-02-unnest.rds")) %>%
   ungroup() %>%
   mutate_if(is.numeric, dplyr::na_if, y=0)
@@ -552,6 +442,11 @@ tbl_show <-  tbl_ne %>%
          month %in% c("01", "02", "03"),
          code_prod =="1005")
 tbl_show %>%
-  kable(align = "c", caption = "步骤3：贸易变动计算")
+  kable(align = "c", caption = "步骤3 贸易变动计算")
 ```
 
+
+## 3.3 整合为完整的**分析数据集**
+
+
+会上操作。
