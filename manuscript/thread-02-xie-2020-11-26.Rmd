@@ -239,7 +239,7 @@ tbl_demo1 %>%
   kable(align = "c", caption = "假象的贸易案例数据T1")
 ```
 
-请根据上述$T_0$和$T_1$两个时期贸易数据，进行相应的时序分解计算
+请根据上述$T_0$和$T_1$两个时期贸易数据（分别见表\@ref(tab:demo-trade)和表\@ref(tab:demo-trade1)），进行相应的时序分解计算
 
 <br>
 

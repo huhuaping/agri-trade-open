@@ -157,17 +157,37 @@ tbl_compare <- full_join(hs_prod4d_2002, hs_prod4d_2012, by = "d4") %>%
 
 ## HS2012数据描述性分析
 
-读取已经合并好的数据，并进行简单清洗：
+读取已经合并好的数据，并进行简单清洗，具体包括：
 
-```{r}
+- 去掉原数据中的**千分位分隔符**（逗号`,`）。
+- 正确变换列类型，例如列`value`（贸易额）的类型应该为`number`（数值型）。
+- 变换数值单位。例如列`value`（贸易额）的单位由**美元**变换为**万美元**。
+- 筛除不必要的数据行。例如，删除所有**贸易量**行（用不到），以及**贸易额**的无数据行（因为没有产生贸易活动）。
+- 加入**国家**的编码等信息。需要用到`tbl_nation`的数据表，先处理好匹配需要的`key`，然后使用`left_jion()`函数进行匹配。
+
+
+
+```{r, echo=TRUE}
 # 读取数据
 tbl_hs2012 <- read_rds("../data/eps/tbl-hs2012.rds")
+
+tbl_nation <- read_rds("../data/eps/list-nation-hs2012.rds") %>%
+  rename("country" = "nation", "country_code"="code",
+         "country_id"="index")
+#str(tbl_nation)
 
 # 转换数据形式
 tbl_hsclear <- tbl_hs2012 %>%
   mutate(value = str_replace_all(value, ",", ""))  %>%
-  mutate(value = as.numeric(value)) %>%
-  filter(str_detect(var, "美元"))
+  mutate(value = as.numeric(value),
+         value = 0.001*value) %>%
+  filter(str_detect(var, "美元"), !is.na(value))  %>%
+  left_join(., tbl_nation, by = "country")%>%
+  arrange(code_prod, year,month, country_id)
+
+#head(tbl_hsclear)
+#unique(tbl_hsclear$year)
+#str(tbl_hsclear)
 ```
 
 
@@ -238,6 +258,82 @@ tbl_smry <- tbl_hsclear %>%
 
 
 
+# 得到分析数据表
 
+## 贸易总额及其月度变动
+
+### 理论表达
+
+$X_{l0}$表示**分产品每个月**的加总贸易额，$X_{l1}$表示滞后1期变量。
+
+$\Delta X= X_{l0} -X_{l1}$表示**分产品**下的**月度贸易变动额**。
+
+### 代码操作
+
+**具体思路**如下：
+
+a. 我们注意到原数据中实际上已经有**分产品**下的**月度贸易总额**。数据。也即`country`变量下包含有`总值`类别，因此可以直接使用`filter()`函数过滤得到**分产品**下的**月度贸易总额**。
+
+b. **分产品**下的**月度贸易变动额**可以先计算得到滞后变量$X_{l1}$，然后再差分得到贸易变动额（$\Delta X}= X_{l0} - X_{l1}$）。具体使用`group_by()` + `dplyr::lag()`函数操作得到滞后变量。
+
+以下为具体`R`代码操作：
+
+```{r, echo=T}
+xc <- tbl_hsclear %>%
+  arrange(code_prod, year, month) %>%
+  filter(country_id==1) %>%
+  #unite(col = "ym", year, month, sep = "-", remove = FALSE) %>%
+  select(code_prod,product, year, month, value) %>%
+  group_by(product) %>%
+  mutate(x_l0 = value, 
+         x_l1 = dplyr::lag(value,n=1)) %>%
+  ungroup() %>%
+  mutate(delta_x = x_l0 - x_l1)
+
+```
+
+下面表\@ref(tab:trade-value)简单展示了得到的数据表结果：
+
+```{r trade-value}
+list_cols <- c("index", "code_prod","product",
+               "year", "month", "x_l0", "x_l1", "delta_x")
+
+xc %>%
+  add_column(index = 1:nrow(.), .before = "code_prod") %>%
+  select(all_of(list_cols)) %>%
+  filter(code_prod %in% c("0201","1001", "1005","1006","1201")) %>%
+  group_by(code_prod) %>%
+  slice(tail(row_number(), 4)) %>%
+  kable(align = "c", caption = "（其中5类产品）分产品的月度贸易额及变动（单位：万美元）")
+```
+
+
+
+## 得到变动因素1：由于新加入国家引起贸易变动
+
+### 理论表达
+
+$$\begin{equation}
+\Delta X_{t}=\sum_{c \in N} X_{c t}-\sum_{c \in E} X_{c t-1}+\sum_{c \in C} \Delta X_{c t}
+\end{equation}$$
+
+其中：
+
+$$\begin{equation}
+\Delta X_{c t}=\sum_{j \in G_{c}} \Delta X_{c j t}+\sum_{j \in S_{c}} \Delta X_{c t}
+\end{equation}$$
+
+### 代码操作
+
+```{r, echo=T}
+rm_list <- c("var", "ym", "country_code")
+tbl_newer <- tbl_hsclear %>%
+  select(-all_of(rm_list)) %>%
+  filter(country_id!=1) %>%
+  group_by(code_prod, product, year, month) %>%
+  nest() %>%
+  ungroup() %>%
+  rename("dt_l0"="data")
+```
 
 
