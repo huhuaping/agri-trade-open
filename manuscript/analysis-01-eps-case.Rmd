@@ -106,7 +106,7 @@ n_operation <- 5
 下面合并操作只需要运行一次即可。
 
 ```{r, eval=FALSE, echo= TRUE}
-all_files <- list.files("../data/eps/import/HS2012")
+all_files <- list.files(here("data/eps/import/HS2012"))
 n <- length(all_files)
 
 path_dir <- here::here("manuscript","data","eps", "import", "HS2012")
@@ -164,6 +164,7 @@ tbl_compare <- full_join(hs_prod4d_2002, hs_prod4d_2012, by = "d4") %>%
 - 变换数值单位。例如列`value`（贸易额）的单位由**美元**变换为**万美元**。
 - 筛除不必要的数据行。例如，删除所有**贸易量**行（用不到），以及**贸易额**的无数据行（因为没有产生贸易活动）。
 - 加入**国家**的编码等信息。需要用到`tbl_nation`的数据表，先处理好匹配需要的`key`，然后使用`left_jion()`函数进行匹配。
+- 删除重复行，例如产品`0909`就存在重复情形（原因可能来自于最开始的数据抓取环节）
 
 
 
@@ -183,7 +184,8 @@ tbl_hsclear <- tbl_hs2012 %>%
          value = 0.001*value) %>%
   filter(str_detect(var, "美元"), !is.na(value))  %>%
   left_join(., tbl_nation, by = "country")%>%
-  arrange(code_prod, year,month, country_id)
+  arrange(code_prod, year,month, country_id) %>%
+  distinct()
 
 #head(tbl_hsclear)
 #unique(tbl_hsclear$year)
@@ -292,6 +294,8 @@ xc <- tbl_hsclear %>%
 
 ```
 
+### 过程解释
+
 下面表\@ref(tab:trade-value)简单展示了得到的数据表结果：
 
 ```{r trade-value}
@@ -309,7 +313,7 @@ xc %>%
 
 
 
-## 得到变动因素1：由于新加入国家引起贸易变动
+## 贸易变动分解
 
 ### 理论表达
 
@@ -323,17 +327,216 @@ $$\begin{equation}
 \Delta X_{c t}=\sum_{j \in G_{c}} \Delta X_{c j t}+\sum_{j \in S_{c}} \Delta X_{c t}
 \end{equation}$$
 
+- $V_n$表示由于新国家加入（`Newcoming`）贸易（与上月相比），引发的贸易额变动:
+
+$$V_n=\sum_{c \in N} X_{c t}$$
+
+- $V_e$表示由于原国家退出（`Exit`）贸易（与上月相比），引发的贸易额变动：
+
+$$V_e=\sum_{c \in E} X_{c t}$$
+同时，我们还可以分别计算出**进入或退出**的国家名单、国家数量、贸易密度，具体变量定义为：
+
+- **新进入**的国家名单$C_n$、国家数量$N_n$，贸易密度$D_n$。
+- **退出**的国家名单$C_e$、国家数量$N_e$，贸易密度$D_e$。
+
 ### 代码操作
 
+**基本思路**：
+
+- 实现新的数据形式变换（按产品分年月，"折叠"行数据）。利用`group_by()` + `nest()`函数，构造出`list-column data.frame`。
+
+- 构造**当期**$T_{1}$的数据块和**滞后期**$T_0$的数据块。具体要用到`lag()`函数。
+
+> 要注意对`初始项`的处理，可以是“保持”、“NA”。我们选择了“保持”。
+
+- 比较**当期**数据块和**滞后期**数据块的差异，分别计算得到**进入或退出**的国家名单$C_{\{n,e\}}$、国家数量$N_{\{n,e\}}$、贸易密度$D_{\{n,e\}}$、贸易额变动$V_{\{n,e\}}$。
+
+> 具体要用到平行计算包`purrr::map2()`函数，同时还需要编写专门的函数`compare.tbls()`函数来得到自己想要的上述几个变量。
+
+具体的`R`代码如下：
+
+> 注意：因为数据集比较大，而且设计到多个计算，尽管`purrr::map2()`已经进行了平行化运算，但是还是会耗费一定计算时间，大约`1-2`分钟。因此，**强烈建议**一次计算，然后保留结果。
+
+首先，编写定制函数`compare.tbls()`：
+
 ```{r, echo=T}
+
+#dt2 <- tbl_compare$dt_l0[1][[1]]
+#dt1 <- tbl_compare$dt_l1[1][[1]] %>%
+  #mutate(country=c(LETTERS[1:5]))
+
+# build function for map2 
+## it can compare difference with two data.frame, also bypass some calculate
+compare.tbls <- function(dt1, dt2){
+  # new coming country
+  c_new <- setdiff(dt2$country, dt1$country)
+  n_new <- length(c_new)
+  v_new <- dt2 %>%
+    filter(country %in% c_new) %>%
+    summarise(value = sum(value, na.rm = T)) %>%
+    unlist()
+  d_new <- ifelse(n_new!=0, v_new/n_new, NA)
+  
+  # exit country
+  c_exit <- setdiff(dt1$country,dt2$country )
+  n_exit <- length(c_exit)
+  v_exit <- dt1 %>%
+    filter(country %in% c_exit) %>%
+    summarise(value = sum(value, na.rm = T)) %>%
+    unlist()
+  d_exit <- ifelse(n_exit!=0, v_exit/n_exit, NA)
+  
+  # comon country
+  common_c <- intersect(dt2$country, dt1$country)
+  dt2_com <- dt2 %>%
+    filter(country %in% common_c) %>%
+    add_column(period = "T2", .before = "country")
+  dt1_com <- dt1 %>%
+    filter(country %in% common_c)%>%
+    add_column(period = "T1", .before = "country")
+  ### case if no common country
+  dt_null <- data.frame(matrix(rep(NA,6),nrow = 1 )) 
+  names(dt_null) <- c('country','country_id','T1','T2','status','change')
+  #paste0(paste0("'",names(dt_com) ,"'"), collapse = ",")
+  if (length(common_c)==0) {
+    dt_com <- dt_null %>%
+      filter(!is.na(country))
+  } else{
+    dt_com <- bind_rows(dt2_com, dt1_com) %>%
+      spread(key = period, value = value) %>%
+      mutate(status = ifelse(T2<T1, "S", "G"),
+             change = T2-T1)
+  }
+  
+  c_com <- unlist(dt_com$country)
+  n_com <- length(c_com) 
+  
+  # for grow country
+  dt2_grow <- dt_com %>%
+    filter(status=="G")
+  c_grow <- unlist(dt2_grow$country)
+  n_grow <- length(c_grow)
+  v_grow <- dt2_grow %>%
+    summarise(value = sum(change, na.rm = T)) %>%
+    unlist()
+  d_grow <- ifelse(n_grow!=0, v_grow/n_grow, NA)
+  
+  # for shrink country
+  dt2_shrink <- dt_com %>%
+    filter(status=="S")
+  c_shrink <- unlist(dt2_shrink$country)
+  n_shrink <- length(c_shrink)
+  v_shrink <- dt2_shrink %>%
+    summarise(value = sum(change, na.rm = T)) %>%
+    unlist()
+  d_shrink <- ifelse(n_shrink!=0, v_shrink/n_shrink, NA)
+  
+  # all results
+  out<-  data.frame(c_new = I(list(c_new)), n_new = n_new, 
+                    v_new =v_new, d_new = d_new,
+                    c_exit = I(list(c_exit)), n_exit = n_exit, 
+                    v_exit =v_exit, d_exit = d_exit,
+                    c_com = I(list(c_com)), n_com = n_com,
+                    c_grow = I(list(c_grow)), n_grow = n_grow, 
+                    v_grow =v_grow, d_grow = d_grow,
+                    c_shrink = I(list(c_shrink)), n_shrink = n_shrink, 
+                    v_shrink =v_shrink, d_shrink = d_shrink)
+  return(out)
+}
+
+```
+
+其次，其余的数据**变换**、**计算**和**导出**过程如下：
+
+```{r, echo=T, eval=FALSE}
+# nest dataset and then compare difference
+require(purrr)
 rm_list <- c("var", "ym", "country_code")
-tbl_newer <- tbl_hsclear %>%
+tbl_compare <- tbl_hsclear %>%
   select(-all_of(rm_list)) %>%
   filter(country_id!=1) %>%
   group_by(code_prod, product, year, month) %>%
   nest() %>%
   ungroup() %>%
-  rename("dt_l0"="data")
+  rename("dt_l0"="data") %>%
+  group_by(code_prod) %>%
+  mutate(dt_l1 = lag(dt_l0,
+                     default = list(first(dt_l0)))) %>%
+  # purrr with custom function compare.tbls
+  mutate(compare = map2(.x = dt_l1, .y = dt_l0, .f = compare.tbls))
+
+write_rds(tbl_compare, here("data/eps/tbl-compare-newcoming-exit-01-raw.rds")) 
+
+# unnest data table
+tbl_ne <- tbl_compare %>%
+  select(-dt_l0, -dt_l1) %>%
+  unnest(cols = compare)
+
+write_rds(tbl_ne, here("data/eps/tbl-compare-newcoming-exit-02-unnest.rds")) 
+
 ```
 
+
+### 过程解释
+
+#### 最开始的数据集
+
+首先，下表\@ref(tab:trade-value-1005)给出了最开始清洗好的数据集`tbl_hsclear`，为了演示方便，我们选择**HS编码**为`1005`的农产品（玉米），年月范围为`2012/01-2020/03`
+
+```{r trade-value-1005}
+col_list<- c('code_prod','product','year','month','country','country_id','value')
+tbl_show <-  tbl_hsclear %>%
+  select(all_of(col_list)) %>%
+  filter(country_id!=1) %>%
+  filter(year ==2012, month %in% c("01", "02", "03"),
+         code_prod =="1005")
+tbl_show %>%
+  kable(align = "c", caption = "2012/01-2020/03期间玉米产品月度贸易数据（单位：万美元）")
+```
+
+#### 分年月按产品“折叠”后的数据集
+
+简要信息如下：
+
+```{r, echo=T}
+tbl_compare <- read_rds(here("data/eps/tbl-compare-newcoming-exit-01-raw.rds"))
+
+#dplyr::glimpse(tbl_compare)
+```
+
+分年月按产品“折叠”后的数据集，详细的数据集形态见图\@ref(fig:trade-compare-1005)
+
+```{r trade-compare-1005, fig.cap="步骤2：数据“折叠”及形态关系"}
+include_graphics(here("pic/eps/tbl-compare.png"))
+```
+
+
+
+
+#### 进行月度比较得到的变动分解数据集
+
+首先，我们需要：
+
+- 读取数据文件`.rds`
+- 去掉分组属性`ungroup()`
+- 将`0`全部替换为`NA`。具体需要用到`dplyr::na_if()`函数
+
+```{r }
+tbl_ne <- read_rds(here("data/eps/tbl-compare-newcoming-exit-02-unnest.rds")) %>%
+  ungroup() %>%
+  mutate_if(is.numeric, dplyr::na_if, y=0)
+ 
+```
+
+下表\@ref(tab:trade-unnest-1005)中，我们将看到对年月贸易变动的计算和比较数据集示例：
+
+```{r trade-unnest-1005}
+tbl_show <-  tbl_ne %>%
+  select(-all_of(starts_with("c_"))) %>%
+  filter(year ==2012, 
+         month %in% c("01", "02", "03"),
+         code_prod =="1005")
+tbl_show %>%
+  kable(align = "c", caption = "步骤3：贸易变动计算")
+```
 
